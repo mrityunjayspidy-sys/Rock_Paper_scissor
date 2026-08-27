@@ -1,0 +1,21 @@
+{
+  "name": "rps-adaptive-ai-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspace=@rps/core",
+    "simulate": "npm run simulate --workspace=@rps/core",
+    "simulate:py": "python scripts/simulate_benchmarks.py",
+    "web:dev": "npm run dev --workspace=@rps/web",
+    "web:build": "npm run build --workspace=@rps/web",
+    "mobile:start": "npm run start --workspace=@rps/mobile"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
