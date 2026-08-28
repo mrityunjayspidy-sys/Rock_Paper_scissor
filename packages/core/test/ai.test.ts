@@ -1,10 +1,52 @@
 import { describe, it, expect } from 'vitest';
-import { createAdaptiveAI, chooseMove, updateModel } from '../src/ai';
+import { createAdaptiveAI, chooseMove, updateModel, DIFFICULTY_CONFIGS } from '../src/ai';
 import { resolveOutcome } from '../src/rules';
 import { ALL_MOVES, Move } from '../src/types';
 
 describe('Adaptive Markov AI Engine', () => {
-  it('handles cold start: first 10 rounds are logged as cold-start', () => {
+  it('supports 3 difficulty presets: easy, normal, hard', () => {
+    const easyAI = createAdaptiveAI('easy');
+    const normalAI = createAdaptiveAI('normal');
+    const hardAI = createAdaptiveAI('hard');
+
+    expect(easyAI.config.difficulty).toBe('easy');
+    expect(easyAI.config.epsilon).toBe(DIFFICULTY_CONFIGS.easy.epsilon);
+    expect(easyAI.config.blunderRate).toBeGreaterThan(0);
+
+    expect(normalAI.config.difficulty).toBe('normal');
+    expect(normalAI.config.coldStartRounds).toBe(5);
+
+    expect(hardAI.config.difficulty).toBe('hard');
+    expect(hardAI.config.coldStartRounds).toBe(2);
+    expect(hardAI.config.epsilon).toBe(0.02);
+  });
+
+  it('Hard mode learns immediately within 3 rounds and counters predictable opponent', () => {
+    let state = createAdaptiveAI('hard');
+    const history: Move[] = [];
+    const cycle: Move[] = ['rock', 'paper', 'scissors'];
+    let botWins = 0;
+    const totalRounds = 300;
+
+    for (let r = 0; r < totalRounds; r++) {
+      const oppMove: Move = cycle[r % cycle.length];
+      const decision = chooseMove(state, history);
+      const outcome = resolveOutcome(oppMove, decision.botMove);
+
+      if (outcome === 'lose') {
+        botWins++;
+      }
+
+      state = updateModel(state, oppMove, decision.predictedMove, decision.modelUsed, history);
+      history.push(oppMove);
+    }
+
+    const botWinRate = botWins / totalRounds;
+    // Hard mode should achieve > 92% win rate on cyclic strategy
+    expect(botWinRate).toBeGreaterThan(0.92);
+  });
+
+  it('handles cold start: initial rounds are logged as cold-start', () => {
     let state = createAdaptiveAI({ coldStartRounds: 10, epsilon: 0 });
     const history: Move[] = [];
 
@@ -51,7 +93,6 @@ describe('Adaptive Markov AI Engine', () => {
       const outcome = resolveOutcome(oppMove, decision.botMove);
 
       if (outcome === 'lose') {
-        // From player perspective 'lose' means bot won
         botWins++;
       }
 
@@ -60,33 +101,7 @@ describe('Adaptive Markov AI Engine', () => {
     }
 
     const botWinRate = botWins / totalRounds;
-    // Against fixed 'rock', after 10 rounds cold start, bot should play 'paper' almost 100% of the time
     expect(botWinRate).toBeGreaterThan(0.85);
-  });
-
-  it('converges to high win-rate (> 75%) against a cyclic opponent (rock->paper->scissors)', () => {
-    let state = createAdaptiveAI({ gamma: 0.94, epsilon: 0.05, coldStartRounds: 10 });
-    const history: Move[] = [];
-    const cycle: Move[] = ['rock', 'paper', 'scissors'];
-    let botWins = 0;
-    const totalRounds = 600;
-
-    for (let r = 0; r < totalRounds; r++) {
-      const oppMove: Move = cycle[r % cycle.length];
-      const decision = chooseMove(state, history);
-      const outcome = resolveOutcome(oppMove, decision.botMove);
-
-      if (outcome === 'lose') {
-        botWins++;
-      }
-
-      state = updateModel(state, oppMove, decision.predictedMove, decision.modelUsed, history);
-      history.push(oppMove);
-    }
-
-    const botWinRate = botWins / totalRounds;
-    // Order-1 Markov captures transition rock->paper, paper->scissors, scissors->rock easily
-    expect(botWinRate).toBeGreaterThan(0.75);
   });
 
   it('converges to ~33% win-rate against a uniformly random opponent over 500+ rounds', () => {
@@ -109,9 +124,6 @@ describe('Adaptive Markov AI Engine', () => {
     }
 
     const botWinRate = botWins / totalRounds;
-    // Against uniform random, theoretical win rate is 33.33%.
-    // With N=800, standard error is ~1.6%, 3 sigma is ~5%.
-    // Win rate should be between 27% and 40%.
     expect(botWinRate).toBeGreaterThan(0.27);
     expect(botWinRate).toBeLessThan(0.40);
   });

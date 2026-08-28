@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { Move, Outcome, ModelType } from '@rps/core';
+import { Move, Outcome, ModelType, Difficulty } from '@rps/core';
 import confetti from 'canvas-confetti';
 import { Trophy, XCircle, MinusCircle, ArrowRight, Zap, Brain } from 'lucide-react';
 import { sounds } from '../sound';
 
 interface RevealArenaProps {
+  difficulty: Difficulty;
   playerMove: Move;
   botMove: Move;
   predictedMove: Move;
@@ -21,6 +22,7 @@ const MOVE_DATA: Record<Move, { emoji: string; name: string }> = {
 };
 
 export const RevealArena: React.FC<RevealArenaProps> = ({
+  difficulty,
   playerMove,
   botMove,
   predictedMove,
@@ -112,7 +114,7 @@ export const RevealArena: React.FC<RevealArenaProps> = ({
         {/* Bot Card */}
         <div className="p-8 rounded-3xl bg-neutral-950/80 border border-white/30 flex flex-col items-center text-center shadow-xl shadow-white/5">
           <span className="text-xs uppercase tracking-widest text-white font-bold mb-4 flex items-center gap-1 font-mono">
-            <Brain className="w-3.5 h-3.5" /> Bot Move
+            <Brain className="w-3.5 h-3.5" /> Bot Move ({difficulty.toUpperCase()})
           </span>
           <span className="text-7xl mb-4 select-none animate-float">
             {MOVE_DATA[botMove].emoji}
@@ -124,13 +126,13 @@ export const RevealArena: React.FC<RevealArenaProps> = ({
       </div>
 
       {/* AI Decision Breakdown Insight Card */}
-      <div className="w-full max-w-2xl p-4.5 rounded-2xl bg-neutral-950/60 border border-white/10 mb-8 text-xs text-neutral-300 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="w-full max-w-2xl p-4.5 rounded-2xl bg-neutral-950/60 border border-white/10 mb-8 text-xs text-neutral-300 grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="flex items-center gap-2.5">
           <Zap className="w-4 h-4 text-white shrink-0" />
           <div>
             <span className="text-neutral-500 block">AI Predicted:</span>
             <span className="font-mono font-bold text-white uppercase">
-              {predictedMove} {predictedMove === playerMove ? '✅ Hit' : '❌ Miss'}
+              {predictedMove} {predictedMove === playerMove ? '✅' : '❌'}
             </span>
           </div>
         </div>
@@ -143,6 +145,13 @@ export const RevealArena: React.FC<RevealArenaProps> = ({
               {modelUsed}
             </span>
           </div>
+        </div>
+
+        <div>
+          <span className="text-neutral-500 block">Difficulty:</span>
+          <span className="font-mono font-bold text-white uppercase">
+            {difficulty}
+          </span>
         </div>
 
         <div className="flex items-center gap-2.5">

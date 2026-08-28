@@ -1,19 +1,23 @@
 import React from 'react';
-import { Sparkles, BarChart3, RotateCcw, Video, Keyboard } from 'lucide-react';
-import { SummaryStats } from '@rps/core';
+import { Sparkles, BarChart3, RotateCcw, Video, Keyboard, Flame, Zap, Shield } from 'lucide-react';
+import { SummaryStats, Difficulty } from '@rps/core';
 
 interface HeaderProps {
   mode: 'camera' | 'nocamera';
+  difficulty: Difficulty;
   stats: SummaryStats;
   onSwitchMode: () => void;
+  onSelectDifficulty: (d: Difficulty) => void;
   onOpenStats: () => void;
   onReset: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   mode,
+  difficulty,
   stats,
   onSwitchMode,
+  onSelectDifficulty,
   onOpenStats,
   onReset,
 }) => {
@@ -34,6 +38,49 @@ export const Header: React.FC<HeaderProps> = ({
             </h1>
             <p className="text-xs text-neutral-400">Order-1 & Order-2 Opponent Modeling</p>
           </div>
+        </div>
+
+        {/* 3-Level Difficulty Selector */}
+        <div className="flex items-center gap-1 bg-neutral-900/90 p-1 rounded-xl border border-white/10 text-xs">
+          <span className="text-[11px] text-neutral-500 font-mono px-1.5 hidden sm:inline">AI:</span>
+          <button
+            onClick={() => onSelectDifficulty('easy')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              difficulty === 'easy'
+                ? 'bg-neutral-800 text-white border border-white/20 shadow-sm'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+            title="Casual AI - higher randomness & forgiving play"
+          >
+            <Shield className="w-3 h-3 text-neutral-400" />
+            <span>Easy</span>
+          </button>
+
+          <button
+            onClick={() => onSelectDifficulty('normal')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              difficulty === 'normal'
+                ? 'bg-white/20 text-white border border-white/30 font-bold'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+            title="Standard Adaptive AI - balanced Markov learning"
+          >
+            <Zap className="w-3 h-3 text-white" />
+            <span>Normal</span>
+          </button>
+
+          <button
+            onClick={() => onSelectDifficulty('hard')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+              difficulty === 'hard'
+                ? 'bg-white text-black shadow-md shadow-white/10'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+            title="Mastermind AI - ruthless instant learning & counter-strategy"
+          >
+            <Flame className="w-3 h-3 text-current fill-current" />
+            <span>Hard</span>
+          </button>
         </div>
 
         {/* Live HUD Quick Stats */}

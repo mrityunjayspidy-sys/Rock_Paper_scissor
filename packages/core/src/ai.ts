@@ -3,19 +3,44 @@ import {
   AIConfig,
   ALL_MOVES,
   BotDecision,
+  Difficulty,
   ModelType,
   Move,
   PredictionResult,
 } from './types';
-import { getBeatingMove } from './rules';
+import { getBeatingMove, getLosingMove } from './rules';
 
-export const DEFAULT_AI_CONFIG: AIConfig = {
-  gamma: 0.94,
-  epsilon: 0.08,
-  coldStartRounds: 10,
-  rollingWindowSize: 20,
-  laplaceSmoothing: 0.05,
+export const DIFFICULTY_CONFIGS: Record<Difficulty, AIConfig> = {
+  easy: {
+    difficulty: 'easy',
+    gamma: 0.88,
+    epsilon: 0.45,
+    coldStartRounds: 8,
+    rollingWindowSize: 15,
+    laplaceSmoothing: 0.1,
+    blunderRate: 0.35,
+  },
+  normal: {
+    difficulty: 'normal',
+    gamma: 0.94,
+    epsilon: 0.10,
+    coldStartRounds: 5,
+    rollingWindowSize: 20,
+    laplaceSmoothing: 0.05,
+    blunderRate: 0.0,
+  },
+  hard: {
+    difficulty: 'hard',
+    gamma: 0.96,
+    epsilon: 0.02,
+    coldStartRounds: 2,
+    rollingWindowSize: 25,
+    laplaceSmoothing: 0.02,
+    blunderRate: 0.0,
+  },
 };
+
+export const DEFAULT_AI_CONFIG: AIConfig = DIFFICULTY_CONFIGS.normal;
 
 function createInitialMoveRecord(): Record<Move, number> {
   return {
@@ -44,10 +69,21 @@ function createInitialOrder2Table(): Record<string, Record<Move, number>> {
 }
 
 /**
- * Initializes a new pure Adaptive AI state.
+ * Initializes a new pure Adaptive AI state with difficulty preset or custom config.
  */
-export function createAdaptiveAI(config?: Partial<AIConfig>): AdaptiveAIState {
-  const mergedConfig: AIConfig = { ...DEFAULT_AI_CONFIG, ...config };
+export function createAdaptiveAI(configOrDifficulty?: Difficulty | Partial<AIConfig>): AdaptiveAIState {
+  let mergedConfig: AIConfig;
+  if (typeof configOrDifficulty === 'string' && DIFFICULTY_CONFIGS[configOrDifficulty]) {
+    mergedConfig = { ...DIFFICULTY_CONFIGS[configOrDifficulty] };
+  } else if (typeof configOrDifficulty === 'object') {
+    const base = configOrDifficulty.difficulty
+      ? DIFFICULTY_CONFIGS[configOrDifficulty.difficulty]
+      : DEFAULT_AI_CONFIG;
+    mergedConfig = { ...base, ...configOrDifficulty };
+  } else {
+    mergedConfig = { ...DEFAULT_AI_CONFIG };
+  }
+
   return {
     config: mergedConfig,
     roundCount: 0,
@@ -72,7 +108,7 @@ export function getRollingAccuracy(history: number[]): number {
 }
 
 /**
- * Predicts the opponent's next move based on transition tables.
+ * Predicts the opponent's next move based on transition frequency distribution.
  */
 function predictFromDistribution(
   dist: Record<Move, number>,
@@ -101,7 +137,7 @@ function predictFromDistribution(
 }
 
 /**
- * Pure function to predict the opponent's next move.
+ * Pure function to predict the opponent's next move using multi-order Markov tables.
  */
 export function predictNextMove(
   state: AdaptiveAIState,
@@ -139,7 +175,6 @@ export function predictNextMove(
   const order2Acc = getRollingAccuracy(state.order2History);
 
   // Model selection logic:
-  // Use order-2 if available and accurate; else use order-1
   let selectedModel: ModelType = 'order-1';
   let predictedMove = order1Pred.move;
   let confidence = order1Pred.confidence;
@@ -168,7 +203,7 @@ export function predictNextMove(
 }
 
 /**
- * Pure function to choose the bot's move given game state and history.
+ * Pure function to choose the bot's move given game state, history, and difficulty level.
  */
 export function chooseMove(
   state: AdaptiveAIState,
@@ -191,7 +226,13 @@ export function chooseMove(
     botMove = ALL_MOVES[Math.floor(rng() * ALL_MOVES.length)];
     finalModelUsed = 'random';
   } else {
+    // Normal / Hard winning counter move
     botMove = getBeatingMove(prediction.predictedMove);
+
+    // Easy mode intentional blunder adjustment
+    if (state.config.blunderRate && rng() < state.config.blunderRate) {
+      botMove = getLosingMove(prediction.predictedMove);
+    }
   }
 
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();

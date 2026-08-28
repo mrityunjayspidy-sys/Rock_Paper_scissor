@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
-import { Move, HandClassificationResult, classifyHandGesture } from '@rps/core';
+import { Move, HandClassificationResult, classifyHandGesture, Difficulty } from '@rps/core';
 import { RefreshCw, AlertCircle, Zap, ShieldCheck, Play, Sparkles } from 'lucide-react';
 import { sounds } from '../sound';
 
 interface CameraGameProps {
+  difficulty: Difficulty;
   onPlayMove: (move: Move) => void;
   disabled?: boolean;
 }
 
 export type TriggerMode = 'instant' | '1s' | '3s';
 
-export const CameraGame: React.FC<CameraGameProps> = ({ onPlayMove, disabled = false }) => {
+export const CameraGame: React.FC<CameraGameProps> = ({ difficulty, onPlayMove, disabled = false }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
@@ -344,6 +345,8 @@ export const CameraGame: React.FC<CameraGameProps> = ({ onPlayMove, disabled = f
         <div className="flex items-center gap-2 text-xs text-neutral-400">
           <ShieldCheck className="w-4 h-4 text-white" />
           <span>High-Speed 60fps Detection</span>
+          <span className="text-neutral-700">|</span>
+          <span className="font-mono text-[11px] text-white">AI: {difficulty.toUpperCase()}</span>
         </div>
 
         {/* Mode Selector Tabs */}

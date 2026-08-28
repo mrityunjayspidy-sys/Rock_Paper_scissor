@@ -1,15 +1,15 @@
 # Rock-Paper-Scissors Adaptive AI — Simulation Benchmark Report
 
-Generated at: 2026-08-27 14:15:12 UTC
+Generated at: 2026-08-28 06:31:35 UTC
 
 ## Summary of Results (N=1000 Rounds Each)
 
 | Strategy | Total Rounds | Bot Win Rate | Human Win Rate | Tie Rate | Prediction Accuracy | Order-1 Rolling Acc | Order-2 Rolling Acc | Avg Latency |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **uniform_random** | 1000 | **32.6%** | 33.7% | 33.7% | **33.8%** | 40.0% | 35.0% | 0.0037 ms |
-| **fixed_rock** | 1000 | **94.6%** | 2.7% | 2.7% | **100.0%** | 100.0% | 100.0% | 0.0033 ms |
-| **cyclic** | 1000 | **94.9%** | 3.0% | 2.1% | **99.7%** | 100.0% | 100.0% | 0.0030 ms |
-| **win_stay_lose_shift** | 1000 | **86.8%** | 7.9% | 5.3% | **91.5%** | 95.0% | 95.0% | 0.0031 ms |
+| **uniform_random** | 1000 | **35.8%** | 32.4% | 31.8% | **35.0%** | 15.0% | 35.0% | 0.0051 ms |
+| **fixed_rock** | 1000 | **93.2%** | 3.2% | 3.6% | **100.0%** | 100.0% | 100.0% | 0.0044 ms |
+| **cyclic** | 1000 | **94.6%** | 2.7% | 2.7% | **99.7%** | 100.0% | 100.0% | 0.0040 ms |
+| **win_stay_lose_shift** | 1000 | **87.0%** | 8.0% | 5.0% | **91.7%** | 100.0% | 100.0% | 0.0042 ms |
 
 ## Key Findings & Verification
 

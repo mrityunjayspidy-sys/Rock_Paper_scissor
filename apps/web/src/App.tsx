@@ -3,6 +3,8 @@ import {
   Move,
   Outcome,
   ModelType,
+  Difficulty,
+  DIFFICULTY_CONFIGS,
   createAdaptiveAI,
   chooseMove,
   updateModel,
@@ -21,10 +23,11 @@ type AppView = 'mode-select' | 'play' | 'reveal' | 'stats';
 
 export const App: React.FC = () => {
   const [mode, setMode] = useState<'camera' | 'nocamera'>('nocamera');
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [view, setView] = useState<AppView>('mode-select');
 
   const [aiState, setAiState] = useState<AdaptiveAIState>(() =>
-    createAdaptiveAI({ gamma: 0.94, epsilon: 0.08, coldStartRounds: 10 })
+    createAdaptiveAI('normal')
   );
   const loggerRef = useRef<RoundLogger>(new RoundLogger());
   const [history, setHistory] = useState<Move[]>([]);
@@ -41,13 +44,21 @@ export const App: React.FC = () => {
 
   const stats = loggerRef.current.getStats();
 
+  const handleSelectDifficulty = (newDifficulty: Difficulty) => {
+    setDifficulty(newDifficulty);
+    setAiState((prev) => ({
+      ...prev,
+      config: { ...DIFFICULTY_CONFIGS[newDifficulty] },
+    }));
+  };
+
   const handleSelectMode = (selectedMode: 'camera' | 'nocamera') => {
     setMode(selectedMode);
     setView('play');
   };
 
   const handlePlayMove = (playerMove: Move) => {
-    // 1. AI decides bot move based on opponent history
+    // 1. AI decides bot move based on opponent history & difficulty
     const decision = chooseMove(aiState, history);
 
     // 2. Resolve outcome
@@ -94,7 +105,7 @@ export const App: React.FC = () => {
   };
 
   const handleReset = () => {
-    setAiState(createAdaptiveAI({ gamma: 0.94, epsilon: 0.08, coldStartRounds: 10 }));
+    setAiState(createAdaptiveAI(difficulty));
     loggerRef.current.clear();
     setHistory([]);
     setLastRoundDetails(null);
@@ -128,22 +139,41 @@ export const App: React.FC = () => {
       {view !== 'mode-select' && (
         <Header
           mode={mode}
+          difficulty={difficulty}
           stats={stats}
           onSwitchMode={() => setView('mode-select')}
+          onSelectDifficulty={handleSelectDifficulty}
           onOpenStats={() => setView('stats')}
           onReset={handleReset}
         />
       )}
 
       <main className="flex-1 flex flex-col justify-center">
-        {view === 'mode-select' && <ModeSelector onSelectMode={handleSelectMode} />}
+        {view === 'mode-select' && (
+          <ModeSelector
+            difficulty={difficulty}
+            onSelectDifficulty={handleSelectDifficulty}
+            onSelectMode={handleSelectMode}
+          />
+        )}
 
-        {view === 'play' && mode === 'nocamera' && <NoCameraGame onPlayMove={handlePlayMove} />}
+        {view === 'play' && mode === 'nocamera' && (
+          <NoCameraGame
+            difficulty={difficulty}
+            onPlayMove={handlePlayMove}
+          />
+        )}
 
-        {view === 'play' && mode === 'camera' && <CameraGame onPlayMove={handlePlayMove} />}
+        {view === 'play' && mode === 'camera' && (
+          <CameraGame
+            difficulty={difficulty}
+            onPlayMove={handlePlayMove}
+          />
+        )}
 
         {view === 'reveal' && lastRoundDetails && (
           <RevealArena
+            difficulty={difficulty}
             playerMove={lastRoundDetails.playerMove}
             botMove={lastRoundDetails.botMove}
             predictedMove={lastRoundDetails.predictedMove}

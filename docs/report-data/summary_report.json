@@ -2,45 +2,45 @@
   {
     "Strategy": "uniform_random",
     "TotalRounds": 1000,
-    "BotWinRate": "35.1%",
-    "HumanWinRate": "32.1%",
-    "TieRate": "32.8%",
-    "PredictionAccuracy": "35.8%",
-    "Order1RollingAcc": "45.0%",
-    "Order2RollingAcc": "50.0%",
-    "AvgLatencyMs": "0.011ms"
+    "BotWinRate": "35.8%",
+    "HumanWinRate": "32.4%",
+    "TieRate": "31.8%",
+    "PredictionAccuracy": "35.0%",
+    "Order1RollingAcc": "15.0%",
+    "Order2RollingAcc": "35.0%",
+    "AvgLatencyMs": "0.0051 ms"
   },
   {
     "Strategy": "fixed_rock",
     "TotalRounds": 1000,
-    "BotWinRate": "93.7%",
-    "HumanWinRate": "3.1%",
-    "TieRate": "3.2%",
+    "BotWinRate": "93.2%",
+    "HumanWinRate": "3.2%",
+    "TieRate": "3.6%",
     "PredictionAccuracy": "100.0%",
     "Order1RollingAcc": "100.0%",
     "Order2RollingAcc": "100.0%",
-    "AvgLatencyMs": "0.011ms"
+    "AvgLatencyMs": "0.0044 ms"
   },
   {
     "Strategy": "cyclic",
     "TotalRounds": 1000,
-    "BotWinRate": "94.7%",
-    "HumanWinRate": "2.9%",
-    "TieRate": "2.4%",
+    "BotWinRate": "94.6%",
+    "HumanWinRate": "2.7%",
+    "TieRate": "2.7%",
     "PredictionAccuracy": "99.7%",
     "Order1RollingAcc": "100.0%",
     "Order2RollingAcc": "100.0%",
-    "AvgLatencyMs": "0.010ms"
+    "AvgLatencyMs": "0.0040 ms"
   },
   {
     "Strategy": "win_stay_lose_shift",
     "TotalRounds": 1000,
-    "BotWinRate": "87.9%",
-    "HumanWinRate": "6.7%",
-    "TieRate": "5.4%",
-    "PredictionAccuracy": "92.7%",
-    "Order1RollingAcc": "70.0%",
+    "BotWinRate": "87.0%",
+    "HumanWinRate": "8.0%",
+    "TieRate": "5.0%",
+    "PredictionAccuracy": "91.7%",
+    "Order1RollingAcc": "100.0%",
     "Order2RollingAcc": "100.0%",
-    "AvgLatencyMs": "0.010ms"
+    "AvgLatencyMs": "0.0042 ms"
   }
 ]

@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { Move } from '@rps/core';
+import { Move, Difficulty } from '@rps/core';
 import { sounds } from '../sound';
 
 interface NoCameraGameProps {
+  difficulty: Difficulty;
   onPlayMove: (move: Move) => void;
   disabled?: boolean;
 }
@@ -35,7 +36,7 @@ const MOVE_CARDS: MoveCardDef[] = [
   },
 ];
 
-export const NoCameraGame: React.FC<NoCameraGameProps> = ({ onPlayMove, disabled = false }) => {
+export const NoCameraGame: React.FC<NoCameraGameProps> = ({ difficulty, onPlayMove, disabled = false }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (disabled) return;
@@ -63,13 +64,17 @@ export const NoCameraGame: React.FC<NoCameraGameProps> = ({ onPlayMove, disabled
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-12 flex flex-col items-center">
-      <div className="text-center mb-10">
+    <div className="w-full max-w-4xl mx-auto px-4 py-10 flex flex-col items-center">
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-white/15 text-xs font-mono text-neutral-300 mb-3">
+          <span>AI Difficulty:</span>
+          <span className="text-white font-bold uppercase">{difficulty}</span>
+        </div>
         <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading mb-2">
           Make Your Move
         </h2>
         <p className="text-sm text-neutral-400">
-          Tap a card or press the corresponding shortcut key <span className="font-mono text-white font-bold">(R, P, S)</span>
+          Tap a card or press shortcut key <span className="font-mono text-white font-bold">(R, P, S)</span>
         </p>
       </div>
 

@@ -1,19 +1,92 @@
 import React from 'react';
-import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight, Flame, Shield, Zap } from 'lucide-react';
+import { Difficulty } from '@rps/core';
 
 interface ModeSelectorProps {
+  difficulty: Difficulty;
+  onSelectDifficulty: (d: Difficulty) => void;
   onSelectMode: (mode: 'camera' | 'nocamera') => void;
 }
 
-export const ModeSelector: React.FC<ModeSelectorProps> = ({ onSelectMode }) => {
+export const ModeSelector: React.FC<ModeSelectorProps> = ({
+  difficulty,
+  onSelectDifficulty,
+  onSelectMode,
+}) => {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[80vh] text-center">
-      <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight mb-4 font-heading">
+    <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[80vh] text-center">
+      <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight mb-3 font-heading">
         Beat the <span className="underline decoration-white/30 underline-offset-8">Adaptive AI</span>
       </h1>
-      <p className="text-base sm:text-lg text-neutral-400 max-w-2xl mb-12">
-        The bot analyzes your past move sequences using Order-1 & Order-2 Markov frequency tables with exponential decay (γ=0.94) to predict and counter your next move.
+      <p className="text-base sm:text-lg text-neutral-400 max-w-2xl mb-8">
+        The bot learns from your past move sequences using Order-1 & Order-2 Markov tables with exponential decay to anticipate and counter your next move.
       </p>
+
+      {/* Difficulty Level Selection */}
+      <div className="w-full max-w-2xl mb-10">
+        <span className="text-xs uppercase tracking-widest text-neutral-400 font-mono font-bold block mb-3">
+          Select AI Difficulty Level
+        </span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Easy */}
+          <button
+            onClick={() => onSelectDifficulty('easy')}
+            className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+              difficulty === 'easy'
+                ? 'bg-neutral-900 border-white text-white ring-2 ring-white/20'
+                : 'bg-neutral-950/60 border-white/10 text-neutral-400 hover:border-white/30 hover:text-neutral-200'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-bold font-heading text-base flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-neutral-300" /> Easy
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10">Casual</span>
+            </div>
+            <p className="text-xs text-neutral-400">Forgiving AI with higher randomness and blunders.</p>
+          </button>
+
+          {/* Normal */}
+          <button
+            onClick={() => onSelectDifficulty('normal')}
+            className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+              difficulty === 'normal'
+                ? 'bg-neutral-900 border-white text-white ring-2 ring-white/20'
+                : 'bg-neutral-950/60 border-white/10 text-neutral-400 hover:border-white/30 hover:text-neutral-200'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-bold font-heading text-base flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-white" /> Normal
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10">Adaptive</span>
+            </div>
+            <p className="text-xs text-neutral-400">Balanced Markov opponent modeling with decay.</p>
+          </button>
+
+          {/* Hard */}
+          <button
+            onClick={() => onSelectDifficulty('hard')}
+            className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+              difficulty === 'hard'
+                ? 'bg-white text-black border-white ring-2 ring-white/40 shadow-lg shadow-white/10'
+                : 'bg-neutral-950/60 border-white/10 text-neutral-400 hover:border-white/30 hover:text-neutral-200'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-bold font-heading text-base flex items-center gap-1.5">
+                <Flame className={`w-4 h-4 ${difficulty === 'hard' ? 'text-black fill-current' : 'text-white'}`} /> Hard
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${difficulty === 'hard' ? 'bg-black text-white font-bold' : 'bg-white/10'}`}>
+                Ruthless
+              </span>
+            </div>
+            <p className={`text-xs ${difficulty === 'hard' ? 'text-neutral-800 font-medium' : 'text-neutral-400'}`}>
+              Instant learning from round 2, aggressive multi-order counterplay.
+            </p>
+          </button>
+        </div>
+      </div>
 
       {/* Mode Selection Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">

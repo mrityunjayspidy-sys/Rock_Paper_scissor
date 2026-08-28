@@ -15,6 +15,8 @@ import {
   Move,
   Outcome,
   ModelType,
+  Difficulty,
+  DIFFICULTY_CONFIGS,
   createAdaptiveAI,
   chooseMove,
   updateModel,
@@ -25,10 +27,11 @@ import {
 
 export default function App() {
   const [mode, setMode] = useState<'nocamera' | 'camera'>('nocamera');
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [view, setView] = useState<'mode-select' | 'play' | 'reveal' | 'stats'>('mode-select');
 
   const [aiState, setAiState] = useState<AdaptiveAIState>(() =>
-    createAdaptiveAI({ gamma: 0.94, epsilon: 0.08, coldStartRounds: 10 })
+    createAdaptiveAI('normal')
   );
   const loggerRef = useRef<RoundLogger>(new RoundLogger());
   const [history, setHistory] = useState<Move[]>([]);
@@ -43,6 +46,14 @@ export default function App() {
   } | null>(null);
 
   const stats = loggerRef.current.getStats();
+
+  const handleSelectDifficulty = (d: Difficulty) => {
+    setDifficulty(d);
+    setAiState((prev) => ({
+      ...prev,
+      config: { ...DIFFICULTY_CONFIGS[d] },
+    }));
+  };
 
   const handlePlayMove = (playerMove: Move) => {
     const decision = chooseMove(aiState, history);
@@ -81,27 +92,32 @@ export default function App() {
     setView('reveal');
   };
 
-  const handleExportCSV = async () => {
-    const csvStr = loggerRef.current.exportCSV();
-    try {
-      await Share.share({
-        message: csvStr,
-        title: 'RPS Round Logs CSV',
-      });
-    } catch (e) {
-      Alert.alert('Export error', String(e));
-    }
+  const handleReset = () => {
+    setAiState(createAdaptiveAI(difficulty));
+    loggerRef.current.clear();
+    setHistory([]);
+    setLastRound(null);
+    setView('mode-select');
   };
 
   const handleExportJSON = async () => {
-    const jsonStr = loggerRef.current.exportJSON();
     try {
-      await Share.share({
-        message: jsonStr,
-        title: 'RPS Round Logs JSON',
-      });
-    } catch (e) {
-      Alert.alert('Export error', String(e));
+      const jsonStr = loggerRef.current.exportJSON();
+      if (Platform.OS === 'web') {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rps_mobile_logs_${Date.now()}.json`;
+        a.click();
+      } else {
+        await Share.share({
+          title: 'Rock-Paper-Scissors Game Logs',
+          message: jsonStr,
+        });
+      }
+    } catch {
+      Alert.alert('Export Error', 'Could not export logs.');
     }
   };
 
@@ -111,12 +127,38 @@ export default function App() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>RPS Adaptive AI</Text>
+        <View>
+          <Text style={styles.headerTitle}>RPS Adaptive AI</Text>
+          <Text style={styles.headerSubtitle}>AI: {difficulty.toUpperCase()}</Text>
+        </View>
         <View style={styles.statsBadge}>
           <Text style={styles.statsBadgeText}>
-            You: {stats.humanWins} | Bot: {stats.botWins} | Ties: {stats.ties}
+            You: {stats.humanWins} | Bot: {stats.botWins}
           </Text>
         </View>
+      </View>
+
+      {/* Difficulty Level Switcher */}
+      <View style={styles.difficultyRow}>
+        {(['easy', 'normal', 'hard'] as const).map((lvl) => (
+          <TouchableOpacity
+            key={lvl}
+            style={[
+              styles.diffBtn,
+              difficulty === lvl && styles.diffBtnActive,
+            ]}
+            onPress={() => handleSelectDifficulty(lvl)}
+          >
+            <Text
+              style={[
+                styles.diffBtnText,
+                difficulty === lvl && styles.diffBtnTextActive,
+              ]}
+            >
+              {lvl.toUpperCase()}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* View: Mode Selection */}
@@ -124,7 +166,7 @@ export default function App() {
         <View style={styles.centerContainer}>
           <Text style={styles.heroTitle}>Adaptive Markov AI</Text>
           <Text style={styles.heroSubtitle}>
-            Order-1 & Order-2 frequency tracking with exponential decay (γ=0.94)
+            Order-1 & Order-2 frequency tracking with exponential decay
           </Text>
 
           <TouchableOpacity
@@ -145,55 +187,58 @@ export default function App() {
               setView('play');
             }}
           >
-            <Text style={styles.cardTitle}>Camera Gesture Mode</Text>
-            <Text style={styles.cardDesc}>Vision camera landmark gesture classification</Text>
+            <Text style={styles.cardTitle}>Vision AI Gesture Mode</Text>
+            <Text style={styles.cardDesc}>Instant gesture recognition & auto shoot</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.statsButton}
+            style={[styles.actionBtn, styles.statsBtn]}
             onPress={() => setView('stats')}
           >
-            <Text style={styles.statsButtonText}>View Stats & Exports</Text>
+            <Text style={styles.actionBtnText}>View Statistics & Export</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* View: Play (No Camera) */}
+      {/* View: Gameplay */}
       {view === 'play' && (
         <View style={styles.centerContainer}>
-          <Text style={styles.sectionTitle}>Choose Your Move</Text>
+          <Text style={styles.sectionTitle}>Make Your Move</Text>
+          <Text style={styles.sectionSubtitle}>
+            Tap a card to showdown with the Adaptive AI
+          </Text>
 
-          <View style={styles.moveButtonsContainer}>
+          <View style={styles.movesGrid}>
             <TouchableOpacity
-              style={[styles.moveButton, styles.cyanBorder]}
+              style={styles.moveCard}
               onPress={() => handlePlayMove('rock')}
             >
               <Text style={styles.moveEmoji}>✊</Text>
-              <Text style={styles.moveLabel}>Rock</Text>
+              <Text style={styles.moveTitle}>Rock</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.moveButton, styles.violetBorder]}
+              style={styles.moveCard}
               onPress={() => handlePlayMove('paper')}
             >
               <Text style={styles.moveEmoji}>✋</Text>
-              <Text style={styles.moveLabel}>Paper</Text>
+              <Text style={styles.moveTitle}>Paper</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.moveButton, styles.emeraldBorder]}
+              style={styles.moveCard}
               onPress={() => handlePlayMove('scissors')}
             >
               <Text style={styles.moveEmoji}>✌️</Text>
-              <Text style={styles.moveLabel}>Scissors</Text>
+              <Text style={styles.moveTitle}>Scissors</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={[styles.actionBtn, styles.secondaryBtn, { marginTop: 24 }]}
             onPress={() => setView('mode-select')}
           >
-            <Text style={styles.secondaryButtonText}>Back to Modes</Text>
+            <Text style={styles.actionBtnText}>Change Mode</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -205,97 +250,114 @@ export default function App() {
             style={[
               styles.outcomeBanner,
               lastRound.outcome === 'win'
-                ? styles.winBanner
+                ? styles.bannerWin
                 : lastRound.outcome === 'lose'
-                ? styles.loseBanner
-                : styles.tieBanner,
+                ? styles.bannerLose
+                : styles.bannerTie,
             ]}
           >
             <Text style={styles.outcomeTitle}>
               {lastRound.outcome === 'win'
-                ? 'VICTORY!'
+                ? 'VICTORY'
                 : lastRound.outcome === 'lose'
-                ? 'DEFEAT!'
-                : 'DRAW!'}
+                ? 'DEFEAT'
+                : 'DRAW'}
+            </Text>
+            <Text style={styles.outcomeSubtitle}>
+              {lastRound.outcome === 'win'
+                ? 'You beat the adaptive model!'
+                : lastRound.outcome === 'lose'
+                ? 'AI anticipated your move'
+                : 'Both made the same move'}
             </Text>
           </View>
 
-          <View style={styles.versusRow}>
-            <View style={styles.versusCard}>
-              <Text style={styles.versusHeader}>YOU</Text>
-              <Text style={styles.versusEmoji}>
-                {lastRound.playerMove === 'rock' ? '✊' : lastRound.playerMove === 'paper' ? '✋' : '✌️'}
+          <View style={styles.showdownRow}>
+            <View style={styles.showdownCard}>
+              <Text style={styles.showdownLabel}>You</Text>
+              <Text style={styles.showdownEmoji}>
+                {lastRound.playerMove === 'rock'
+                  ? '✊'
+                  : lastRound.playerMove === 'paper'
+                  ? '✋'
+                  : '✌️'}
               </Text>
-              <Text style={styles.versusLabel}>{lastRound.playerMove.toUpperCase()}</Text>
+              <Text style={styles.showdownMoveName}>{lastRound.playerMove}</Text>
             </View>
 
-            <Text style={styles.versusText}>VS</Text>
-
-            <View style={styles.versusCard}>
-              <Text style={styles.versusHeader}>BOT</Text>
-              <Text style={styles.versusEmoji}>
-                {lastRound.botMove === 'rock' ? '✊' : lastRound.botMove === 'paper' ? '✋' : '✌️'}
+            <View style={styles.showdownCard}>
+              <Text style={styles.showdownLabel}>Bot ({difficulty.toUpperCase()})</Text>
+              <Text style={styles.showdownEmoji}>
+                {lastRound.botMove === 'rock'
+                  ? '✊'
+                  : lastRound.botMove === 'paper'
+                  ? '✋'
+                  : '✌️'}
               </Text>
-              <Text style={styles.versusLabel}>{lastRound.botMove.toUpperCase()}</Text>
+              <Text style={styles.showdownMoveName}>{lastRound.botMove}</Text>
             </View>
           </View>
 
-          <View style={styles.aiInsightBox}>
-            <Text style={styles.aiInsightText}>
-              Predicted: {lastRound.predictedMove.toUpperCase()} | Model: {lastRound.modelUsed}
-            </Text>
-            <Text style={styles.aiInsightText}>
-              Latency: {lastRound.latencyMs.toFixed(3)} ms
+          <View style={styles.insightBox}>
+            <Text style={styles.insightText}>
+              Model: {lastRound.modelUsed} | Latency: {lastRound.latencyMs.toFixed(2)}ms
             </Text>
           </View>
 
           <TouchableOpacity
-            style={styles.primaryActionButton}
+            style={[styles.actionBtn, styles.primaryBtn]}
             onPress={() => setView('play')}
           >
-            <Text style={styles.primaryActionButtonText}>Next Round</Text>
+            <Text style={styles.primaryBtnText}>Play Next Round</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* View: Stats & Export */}
+      {/* View: Statistics */}
       {view === 'stats' && (
-        <ScrollView style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Model Analytics</Text>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={{ paddingBottom: 40 }}>
+          <Text style={styles.sectionTitle}>Game Statistics</Text>
 
-          <View style={styles.statGrid}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Total Rounds</Text>
-              <Text style={styles.statValue}>{stats.totalRounds}</Text>
+          <View style={styles.kpiGrid}>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{stats.totalRounds}</Text>
+              <Text style={styles.kpiLabel}>Total Rounds</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>AI Accuracy</Text>
-              <Text style={styles.statValue}>{(stats.overallPredictionAccuracy * 100).toFixed(1)}%</Text>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>
+                {(stats.overallPredictionAccuracy * 100).toFixed(0)}%
+              </Text>
+              <Text style={styles.kpiLabel}>AI Accuracy</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Bot Win Rate</Text>
-              <Text style={styles.statValue}>{(stats.botWinRate * 100).toFixed(1)}%</Text>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{(stats.botWinRate * 100).toFixed(0)}%</Text>
+              <Text style={styles.kpiLabel}>Bot Win Rate</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Order-1 Acc</Text>
-              <Text style={styles.statValue}>{(stats.modelStats.order1RollingAccuracy * 100).toFixed(1)}%</Text>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{stats.averageLatencyMs.toFixed(2)}ms</Text>
+              <Text style={styles.kpiLabel}>Avg Latency</Text>
             </View>
-          </View>
-
-          <View style={styles.exportRow}>
-            <TouchableOpacity style={styles.exportButton} onPress={handleExportJSON}>
-              <Text style={styles.exportButtonText}>Export JSON</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.exportButton} onPress={handleExportCSV}>
-              <Text style={styles.exportButtonText}>Export CSV</Text>
-            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={[styles.secondaryButton, { marginTop: 24, marginBottom: 40 }]}
-            onPress={() => setView('mode-select')}
+            style={[styles.actionBtn, styles.primaryBtn, { marginVertical: 12 }]}
+            onPress={handleExportJSON}
           >
-            <Text style={styles.secondaryButtonText}>Back to Game</Text>
+            <Text style={styles.primaryBtnText}>Export JSON Logs</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.secondaryBtn, { marginBottom: 12 }]}
+            onPress={handleReset}
+          >
+            <Text style={styles.actionBtnText}>Reset Game Data</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.secondaryBtn]}
+            onPress={() => setView('play')}
+          >
+            <Text style={styles.actionBtnText}>Back to Game</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -306,7 +368,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#070a13',
+    backgroundColor: '#050505',
   },
   header: {
     flexDirection: 'row',
@@ -315,196 +377,258 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerTitle: {
-    color: '#38bdf8',
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: '#a1a1aa',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   statsBadge: {
-    backgroundColor: '#0f172a',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#334155',
   },
   statsBadgeText: {
-    color: '#cbd5e1',
+    color: '#ffffff',
     fontSize: 11,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontWeight: '600',
+  },
+  difficultyRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  diffBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  diffBtnActive: {
+    backgroundColor: '#ffffff',
+  },
+  diffBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#a1a1aa',
+  },
+  diffBtnTextActive: {
+    color: '#000000',
   },
   centerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+  },
+  scrollContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
     color: '#ffffff',
-    textAlign: 'center',
     marginBottom: 8,
+    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#a1a1aa',
     textAlign: 'center',
     marginBottom: 32,
-    maxWidth: 300,
   },
   card: {
     width: '100%',
-    maxWidth: 320,
     padding: 20,
     borderRadius: 16,
     borderWidth: 1,
-    backgroundColor: '#0f172a',
     marginBottom: 16,
   },
   cyanCard: {
-    borderColor: 'rgba(6, 182, 212, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   violetCard: {
-    borderColor: 'rgba(139, 92, 246, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   cardTitle: {
-    color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#ffffff',
     marginBottom: 4,
   },
   cardDesc: {
-    color: '#94a3b8',
-    fontSize: 12,
-  },
-  statsButton: {
-    marginTop: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#0f172a',
-  },
-  statsButtonText: {
-    color: '#38bdf8',
     fontSize: 13,
-    fontWeight: '600',
+    color: '#a1a1aa',
   },
   sectionTitle: {
-    color: '#ffffff',
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 24,
+    color: '#ffffff',
+    marginBottom: 6,
     textAlign: 'center',
   },
-  moveButtonsContainer: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 32,
+  sectionSubtitle: {
+    fontSize: 13,
+    color: '#a1a1aa',
+    marginBottom: 30,
+    textAlign: 'center',
   },
-  moveButton: {
-    width: 90,
-    height: 120,
-    borderRadius: 16,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    alignItems: 'center',
+  movesGrid: {
+    flexDirection: 'row',
+    gap: 12,
     justifyContent: 'center',
   },
-  cyanBorder: { borderColor: '#06b6d4' },
-  violetBorder: { borderColor: '#8b5cf6' },
-  emeraldBorder: { borderColor: '#10b981' },
-  moveEmoji: { fontSize: 36, marginBottom: 8 },
-  moveLabel: { color: '#ffffff', fontSize: 14, fontWeight: 'bold' },
-  secondaryButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 10,
-    backgroundColor: '#1e293b',
+  moveCard: {
+    width: 100,
+    paddingVertical: 24,
+    alignItems: 'center',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  secondaryButtonText: {
-    color: '#cbd5e1',
-    fontSize: 13,
-    fontWeight: '500',
+  moveEmoji: {
+    fontSize: 44,
+    marginBottom: 10,
+  },
+  moveTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  actionBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  primaryBtn: {
+    backgroundColor: '#ffffff',
+  },
+  primaryBtnText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  statsBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginTop: 8,
+  },
+  actionBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   outcomeBanner: {
-    paddingVertical: 12,
-    paddingHorizontal: 28,
+    width: '100%',
+    padding: 20,
     borderRadius: 16,
+    alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
   },
-  winBanner: { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981' },
-  loseBanner: { backgroundColor: 'rgba(244, 63, 94, 0.15)', borderColor: '#f43f5e' },
-  tieBanner: { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b' },
-  outcomeTitle: { color: '#ffffff', fontSize: 24, fontWeight: '900' },
-  versusRow: {
+  bannerWin: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  bannerLose: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  bannerTie: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  outcomeTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  outcomeSubtitle: {
+    fontSize: 13,
+    color: '#d4d4d8',
+  },
+  showdownRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 20,
-    marginBottom: 24,
+    gap: 16,
+    marginBottom: 20,
   },
-  versusCard: {
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#0f172a',
+  showdownCard: {
+    width: 140,
+    padding: 20,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
-    minWidth: 100,
-  },
-  versusHeader: { color: '#94a3b8', fontSize: 11, fontWeight: 'bold', marginBottom: 6 },
-  versusEmoji: { fontSize: 40, marginBottom: 6 },
-  versusLabel: { color: '#ffffff', fontSize: 13, fontWeight: 'bold' },
-  versusText: { color: '#64748b', fontSize: 16, fontWeight: 'bold' },
-  aiInsightBox: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: '#1e293b',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  showdownLabel: {
+    fontSize: 12,
+    color: '#a1a1aa',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  showdownEmoji: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  showdownMoveName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textTransform: 'capitalize',
+  },
+  insightBox: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     marginBottom: 24,
   },
-  aiInsightText: { color: '#94a3b8', fontSize: 12, marginBottom: 2 },
-  primaryActionButton: {
-    backgroundColor: '#06b6d4',
-    paddingVertical: 14,
-    paddingHorizontal: 36,
-    borderRadius: 14,
+  insightText: {
+    color: '#a1a1aa',
+    fontSize: 12,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
-  primaryActionButtonText: { color: '#070a13', fontSize: 16, fontWeight: 'bold' },
-  statsContainer: { flex: 1, padding: 20 },
-  statGrid: {
+  kpiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  statBox: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#0f172a',
+  kpiCard: {
+    width: '47%',
     padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-  },
-  statLabel: { color: '#94a3b8', fontSize: 12, marginBottom: 4 },
-  statValue: { color: '#ffffff', fontSize: 22, fontWeight: 'bold' },
-  exportRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  exportButton: {
-    flex: 1,
-    backgroundColor: '#1e293b',
-    paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  exportButtonText: { color: '#38bdf8', fontSize: 13, fontWeight: '600' },
+  kpiValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 2,
+  },
+  kpiLabel: {
+    fontSize: 12,
+    color: '#a1a1aa',
+  },
 });

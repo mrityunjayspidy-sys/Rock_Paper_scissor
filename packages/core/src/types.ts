@@ -9,7 +9,11 @@ export type Outcome = 'win' | 'lose' | 'tie';
 
 export type ModelType = 'order-1' | 'order-2' | 'random' | 'cold-start';
 
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
 export interface AIConfig {
+  /** Difficulty level preset */
+  difficulty: Difficulty;
   /** Exponential decay factor applied every round before incrementing (default: 0.94) */
   gamma: number;
   /** Exploration rate: probability of making a uniform random move (default: 0.08) */
@@ -20,6 +24,8 @@ export interface AIConfig {
   rollingWindowSize: number;
   /** Smoothing constant for probability calculations (default: 0.05) */
   laplaceSmoothing: number;
+  /** Probability of intentionally making a suboptimal move (Easy mode only) */
+  blunderRate?: number;
 }
 
 export interface PredictionResult {
