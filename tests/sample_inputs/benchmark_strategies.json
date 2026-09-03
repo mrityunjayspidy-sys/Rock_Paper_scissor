@@ -1,0 +1,28 @@
+{
+  "strategies": [
+    {
+      "name": "uniform_random",
+      "description": "Plays Rock, Paper, or Scissors with uniform probability P(m) = 1/3 at every turn.",
+      "theoreticalBotWinRate": 0.3333,
+      "sampleSequence": ["rock", "scissors", "rock", "paper", "scissors", "paper", "rock"]
+    },
+    {
+      "name": "fixed_rock",
+      "description": "Inflexible fixed player who plays Rock on every single round.",
+      "theoreticalBotWinRate": 1.0,
+      "sampleSequence": ["rock", "rock", "rock", "rock", "rock", "rock", "rock"]
+    },
+    {
+      "name": "cyclic",
+      "description": "Predictable cyclic player executing the cycle Rock -> Paper -> Scissors -> Rock.",
+      "theoreticalBotWinRate": 1.0,
+      "sampleSequence": ["rock", "paper", "scissors", "rock", "paper", "scissors"]
+    },
+    {
+      "name": "win_stay_lose_shift",
+      "description": "Reactive psychological heuristic: re-plays previous move on a win, shifts to next move on a loss/tie.",
+      "theoreticalBotWinRate": 0.90,
+      "sampleSequence": ["rock", "rock", "paper", "scissors", "scissors", "rock"]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "sessions": [
+    {
+      "sessionId": "session-demo-001",
+      "difficulty": "normal",
+      "mode": "nocamera",
+      "totalRounds": 5,
+      "rounds": [
+        {
+          "roundNumber": 1,
+          "opponentMove": "rock",
+          "predictedMove": "scissors",
+          "botMove": "rock",
+          "result": "tie",
+          "modelUsed": "cold-start",
+          "predictionCorrect": false,
+          "decisionLatencyMs": 0.005
+        },
+        {
+          "roundNumber": 2,
+          "opponentMove": "rock",
+          "predictedMove": "rock",
+          "botMove": "paper",
+          "result": "lose",
+          "modelUsed": "order-1",
+          "predictionCorrect": true,
+          "decisionLatencyMs": 0.003
+        },
+        {
+          "roundNumber": 3,
+          "opponentMove": "rock",
+          "predictedMove": "rock",
+          "botMove": "paper",
+          "result": "lose",
+          "modelUsed": "order-1",
+          "predictionCorrect": true,
+          "decisionLatencyMs": 0.003
+        },
+        {
+          "roundNumber": 4,
+          "opponentMove": "paper",
+          "predictedMove": "rock",
+          "botMove": "paper",
+          "result": "tie",
+          "modelUsed": "order-2",
+          "predictionCorrect": false,
+          "decisionLatencyMs": 0.004
+        },
+        {
+          "roundNumber": 5,
+          "opponentMove": "scissors",
+          "predictedMove": "scissors",
+          "botMove": "rock",
+          "result": "lose",
+          "modelUsed": "order-2",
+          "predictionCorrect": true,
+          "decisionLatencyMs": 0.003
+        }
+      ]
+    }
+  ]
+}
