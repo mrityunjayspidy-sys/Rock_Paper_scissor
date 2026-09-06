@@ -4,9 +4,15 @@
 > 
 > *Made with Love and Code by **Mrityunjay***
 
+## 📌 Problem Statement
+
+In competitive zero-sum non-cooperative games like Rock-Paper-Scissors, pure Nash equilibrium dictates playing moves uniformly at random ($P = 1/3$). However, human decision-making consistently violates stationarity and randomness due to cognitive heuristics (e.g., win-stay/lose-shift, cyclic patterns, gambler's fallacy, and recency bias). 
+
+The goal of this project is to construct a **real-time, adaptive opponent-modeling AI engine** that learns and predicts human player tendencies dynamically while playing, rapidly counters habit shifts using exponential memory decay, and pairs with a real-time computer vision interface for seamless interaction.
+
 ---
 
-## 🌟 Highlights
+## 🌟 Key Highlights
 
 - **Adaptive Opponent Modeling**: Real-time multi-order Markov transition frequency matrices — Order-1 ($P(m_t \mid m_{t-1})$) and Order-2 ($P(m_t \mid m_{t-2}, m_{t-1})$).
 - **Exponential Memory Decay ($\gamma = 0.94$)**: Dynamically discounts older rounds to rapidly adapt to human counter-strategies.
@@ -19,6 +25,19 @@
 ---
 
 ## 📂 Project Structure
+
+```
+rock-paper-scissors-ai/
+├── src/            # source code (UI, Markov AI engines, simulation runners)
+├── tests/          # test cases (Vitest & Pytest) & sample input fixtures
+├── docs/           # report.pdf, screenshots, plots & telemetry datasets
+├── README.md       # problem, approach, how-to-run, sample I/O
+├── requirements.txt# dependencies (or equivalent package.json)
+├── .gitignore      # git ignore rules
+└── LICENSE         # MIT License
+```
+
+### Detailed File Organization:
 
 ```
 .
@@ -84,7 +103,7 @@
 
 ---
 
-## 🔬 Mathematical Approach & Formulation
+## 🔬 Approach & Mathematical Formulation
 
 ### 1. Markov Transition Modeling
 The AI treats human opponent play as a non-stationary Markov decision process.
