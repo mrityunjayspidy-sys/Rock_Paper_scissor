@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight, Flame, Shield, Zap, Play } from 'lucide-react';
+import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight, Flame, Shield, Zap, Play, BookOpen } from 'lucide-react';
 import { Difficulty, SummaryStats, RoundLog } from '../ai';
 import { HomeStats } from './HomeStats';
 
@@ -10,6 +10,7 @@ interface ModeSelectorProps {
   stats: SummaryStats;
   logs: readonly RoundLog[];
   onOpenStats: () => void;
+  onOpenAbout?: () => void;
   onResetStats: () => void;
   onDownloadJSON: () => void;
   onDownloadCSV: () => void;
@@ -22,6 +23,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   stats,
   logs,
   onOpenStats,
+  onOpenAbout,
   onResetStats,
   onDownloadJSON,
   onDownloadCSV,
@@ -176,6 +178,38 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
           </div>
         </button>
       </div>
+
+      {/* AI Architecture & Algorithms Explorer Banner */}
+      {onOpenAbout && (
+        <div className="w-full max-w-4xl mx-auto mb-8">
+          <div className="p-4 sm:p-5 rounded-3xl bg-neutral-950/80 border border-white/10 hover:border-white/20 transition-all flex flex-wrap items-center justify-between gap-4 text-left shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  About the AI Architecture & Algorithms
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-white border border-white/20">
+                    CSP • Rules • Bayesian
+                  </span>
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Explore how Constraint Satisfaction, symbolic strategy detection, Dirichlet Markov models, and Fair Play work.
+                </p>
+              </div>
+            </div>
+            <button
+              id="home-open-about-btn"
+              onClick={onOpenAbout}
+              className="px-4 py-2 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-white/10 hover:scale-105"
+            >
+              <span>Explore Architecture</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Match Statistics & AI Telemetry Report (Below the Playing Block) */}
       <HomeStats

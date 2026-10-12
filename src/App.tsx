@@ -24,8 +24,9 @@ import { NoCameraGame } from './components/NoCameraGame';
 import { CameraGame } from './components/CameraGame';
 import { RevealArena } from './components/RevealArena';
 import { StatsView } from './components/StatsView';
+import { AboutView } from './components/AboutView';
 
-type AppView = 'mode-select' | 'play' | 'reveal' | 'stats';
+type AppView = 'mode-select' | 'play' | 'reveal' | 'stats' | 'about';
 
 export const App: React.FC = () => {
   const [mode, setMode] = useState<'camera' | 'nocamera'>('nocamera');
@@ -78,8 +79,17 @@ export const App: React.FC = () => {
     setView('stats');
   };
 
+  const handleOpenAbout = () => {
+    setPreviousView(view);
+    setView('about');
+  };
+
   const handleBackFromStats = () => {
     setView(previousView === 'stats' ? 'mode-select' : previousView);
+  };
+
+  const handleBackFromAbout = () => {
+    setView(previousView === 'about' ? 'mode-select' : previousView);
   };
 
   const handlePlayMove = (playerMove: Move) => {
@@ -178,6 +188,7 @@ export const App: React.FC = () => {
         onSwitchMode={() => setView('mode-select')}
         onSelectDifficulty={handleSelectDifficulty}
         onOpenStats={handleOpenStats}
+        onOpenAbout={handleOpenAbout}
         onReset={handleReset}
         onExitGame={handleBackToHome}
         isHomePage={view === 'mode-select'}
@@ -192,6 +203,7 @@ export const App: React.FC = () => {
             stats={stats}
             logs={logs}
             onOpenStats={handleOpenStats}
+            onOpenAbout={handleOpenAbout}
             onResetStats={handleReset}
             onDownloadJSON={handleDownloadJSON}
             onDownloadCSV={handleDownloadCSV}
@@ -235,6 +247,13 @@ export const App: React.FC = () => {
             onBack={handleBackFromStats}
             onDownloadJSON={handleDownloadJSON}
             onDownloadCSV={handleDownloadCSV}
+            backButtonLabel={previousView === 'mode-select' ? 'Back to Home' : 'Back to Game'}
+          />
+        )}
+
+        {view === 'about' && (
+          <AboutView
+            onBack={handleBackFromAbout}
             backButtonLabel={previousView === 'mode-select' ? 'Back to Home' : 'Back to Game'}
           />
         )}

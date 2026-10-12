@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, BarChart3, RotateCcw, Video, Keyboard, Flame, Zap, Shield, LogOut } from 'lucide-react';
+import { Sparkles, BarChart3, RotateCcw, Video, Keyboard, Flame, Zap, Shield, LogOut, BookOpen } from 'lucide-react';
 import { SummaryStats, Difficulty } from '../ai';
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   onSwitchMode: () => void;
   onSelectDifficulty: (d: Difficulty) => void;
   onOpenStats: () => void;
+  onOpenAbout?: () => void;
   onReset: () => void;
   onExitGame?: () => void;
   isHomePage?: boolean;
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSwitchMode,
   onSelectDifficulty,
   onOpenStats,
+  onOpenAbout,
   onReset,
   onExitGame,
   isHomePage = false,
@@ -133,6 +135,18 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>No Camera</span>
                 </>
               )}
+            </button>
+          )}
+
+          {onOpenAbout && (
+            <button
+              id="header-about-btn"
+              onClick={onOpenAbout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 text-white border border-white/20 hover:border-white/40 shadow-sm transition-all"
+              title="Learn about AI algorithms and system architecture"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-white" />
+              <span>About AI</span>
             </button>
           )}
 
