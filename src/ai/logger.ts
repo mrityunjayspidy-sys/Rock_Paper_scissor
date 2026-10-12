@@ -173,3 +173,45 @@ export function exportToCSV(logs: readonly RoundLog[]): string {
 
   return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 }
+
+export const STORAGE_KEY = 'rps_ai_round_logs_v2';
+
+export function loadSavedLogs(): RoundLog[] {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return [];
+  }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (err) {
+    console.error('Failed to parse logs from localStorage:', err);
+  }
+  return [];
+}
+
+export function saveLogs(logs: readonly RoundLog[]): void {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return;
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  } catch (err) {
+    console.error('Failed to save logs to localStorage:', err);
+  }
+}
+
+export function clearSavedLogs(): void {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return;
+  }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    console.error('Failed to clear logs from localStorage:', err);
+  }
+}
+

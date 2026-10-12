@@ -8,6 +8,7 @@ interface StatsViewProps {
   onBack: () => void;
   onDownloadJSON: () => void;
   onDownloadCSV: () => void;
+  backButtonLabel?: string;
 }
 
 export const StatsView: React.FC<StatsViewProps> = ({
@@ -16,6 +17,7 @@ export const StatsView: React.FC<StatsViewProps> = ({
   onBack,
   onDownloadJSON,
   onDownloadCSV,
+  backButtonLabel = 'Back to Game',
 }) => {
   const [filter, setFilter] = useState<'all' | 'win' | 'lose' | 'tie'>('all');
 
@@ -26,11 +28,12 @@ export const StatsView: React.FC<StatsViewProps> = ({
       {/* Top Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <button
+          id="stats-back-btn"
           onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-white/10 text-sm font-medium transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Game</span>
+          <span>{backButtonLabel}</span>
         </button>
 
         <div className="flex items-center gap-2">

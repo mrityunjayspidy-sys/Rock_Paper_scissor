@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "simulate": "npx tsx src/simulate.ts",
-    "simulate:py": "python src/simulate.py"
+    "simulate:py": "python src/simulate.py",
+    "experiments": "python run_experiments.py",
+    "test:py": "python -m pytest tests/"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.18",

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   Move,
   Outcome,
@@ -10,7 +10,13 @@ import {
   updateModel,
   resolveOutcome,
   RoundLogger,
+  RoundLog,
   AdaptiveAIState,
+  calculateSummaryStats,
+  loadSavedLogs,
+  saveLogs,
+  clearSavedLogs,
+  reconstructAiState,
 } from './ai';
 import { Header } from './components/Header';
 import { ModeSelector } from './components/ModeSelector';
@@ -25,12 +31,21 @@ export const App: React.FC = () => {
   const [mode, setMode] = useState<'camera' | 'nocamera'>('nocamera');
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [view, setView] = useState<AppView>('mode-select');
+  const [previousView, setPreviousView] = useState<AppView>('mode-select');
 
-  const [aiState, setAiState] = useState<AdaptiveAIState>(() =>
-    createAdaptiveAI('normal')
-  );
-  const loggerRef = useRef<RoundLogger>(new RoundLogger());
-  const [history, setHistory] = useState<Move[]>([]);
+  // Load persisted round logs
+  const [logs, setLogs] = useState<RoundLog[]>(() => loadSavedLogs());
+
+  // Initialize Adaptive AI state (reconstructing Markov state if logs exist)
+  const [aiState, setAiState] = useState<AdaptiveAIState>(() => {
+    if (logs.length > 0) {
+      return reconstructAiState(logs, 'normal').aiState;
+    }
+    return createAdaptiveAI('normal');
+  });
+
+  const loggerRef = useRef<RoundLogger>(new RoundLogger(logs));
+  const [history, setHistory] = useState<Move[]>(() => logs.map((l) => l.opponentMove));
 
   // Last round outcome details for Reveal Arena
   const [lastRoundDetails, setLastRoundDetails] = useState<{
@@ -42,7 +57,8 @@ export const App: React.FC = () => {
     latencyMs: number;
   } | null>(null);
 
-  const stats = loggerRef.current.getStats();
+  // Reactive stats computation
+  const stats = useMemo(() => calculateSummaryStats(logs), [logs]);
 
   const handleSelectDifficulty = (newDifficulty: Difficulty) => {
     setDifficulty(newDifficulty);
@@ -57,6 +73,15 @@ export const App: React.FC = () => {
     setView('play');
   };
 
+  const handleOpenStats = () => {
+    setPreviousView(view);
+    setView('stats');
+  };
+
+  const handleBackFromStats = () => {
+    setView(previousView === 'stats' ? 'mode-select' : previousView);
+  };
+
   const handlePlayMove = (playerMove: Move) => {
     // 1. AI decides bot move based on opponent history & difficulty
     const decision = chooseMove(aiState, history);
@@ -65,7 +90,7 @@ export const App: React.FC = () => {
     const outcome = resolveOutcome(playerMove, decision.botMove);
     const predictionCorrect = decision.predictedMove === playerMove;
 
-    // 3. Record in RoundLogger
+    // 3. Record in RoundLogger and persist to localStorage
     loggerRef.current.recordRound({
       opponentMove: playerMove,
       predictedMove: decision.predictedMove,
@@ -75,6 +100,10 @@ export const App: React.FC = () => {
       predictionCorrect,
       decisionLatencyMs: decision.decisionLatencyMs,
     });
+
+    const currentLogs = [...loggerRef.current.getLogs()];
+    setLogs(currentLogs);
+    saveLogs(currentLogs);
 
     // 4. Update Markov AI model
     const newAiState = updateModel(
@@ -100,6 +129,10 @@ export const App: React.FC = () => {
     setView('reveal');
   };
 
+  const handleBackToHome = () => {
+    setView('mode-select');
+  };
+
   const handleNextRound = () => {
     setView('play');
   };
@@ -107,6 +140,8 @@ export const App: React.FC = () => {
   const handleReset = () => {
     setAiState(createAdaptiveAI(difficulty));
     loggerRef.current.clear();
+    clearSavedLogs();
+    setLogs([]);
     setHistory([]);
     setLastRoundDetails(null);
     setView('mode-select');
@@ -136,17 +171,17 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white selection:bg-white selection:text-black">
-      {view !== 'mode-select' && (
-        <Header
-          mode={mode}
-          difficulty={difficulty}
-          stats={stats}
-          onSwitchMode={() => setView('mode-select')}
-          onSelectDifficulty={handleSelectDifficulty}
-          onOpenStats={() => setView('stats')}
-          onReset={handleReset}
-        />
-      )}
+      <Header
+        mode={mode}
+        difficulty={difficulty}
+        stats={stats}
+        onSwitchMode={() => setView('mode-select')}
+        onSelectDifficulty={handleSelectDifficulty}
+        onOpenStats={handleOpenStats}
+        onReset={handleReset}
+        onExitGame={handleBackToHome}
+        isHomePage={view === 'mode-select'}
+      />
 
       <main className="flex-1 flex flex-col justify-center">
         {view === 'mode-select' && (
@@ -154,6 +189,12 @@ export const App: React.FC = () => {
             difficulty={difficulty}
             onSelectDifficulty={handleSelectDifficulty}
             onSelectMode={handleSelectMode}
+            stats={stats}
+            logs={logs}
+            onOpenStats={handleOpenStats}
+            onResetStats={handleReset}
+            onDownloadJSON={handleDownloadJSON}
+            onDownloadCSV={handleDownloadCSV}
           />
         )}
 
@@ -161,6 +202,7 @@ export const App: React.FC = () => {
           <NoCameraGame
             difficulty={difficulty}
             onPlayMove={handlePlayMove}
+            onBackToHome={handleBackToHome}
           />
         )}
 
@@ -168,6 +210,7 @@ export const App: React.FC = () => {
           <CameraGame
             difficulty={difficulty}
             onPlayMove={handlePlayMove}
+            onBackToHome={handleBackToHome}
           />
         )}
 
@@ -181,16 +224,18 @@ export const App: React.FC = () => {
             outcome={lastRoundDetails.outcome}
             latencyMs={lastRoundDetails.latencyMs}
             onNextRound={handleNextRound}
+            onBackToHome={handleBackToHome}
           />
         )}
 
         {view === 'stats' && (
           <StatsView
-            logs={loggerRef.current.getLogs()}
+            logs={logs}
             stats={stats}
-            onBack={() => setView('play')}
+            onBack={handleBackFromStats}
             onDownloadJSON={handleDownloadJSON}
             onDownloadCSV={handleDownloadCSV}
+            backButtonLabel={previousView === 'mode-select' ? 'Back to Home' : 'Back to Game'}
           />
         )}
       </main>
@@ -203,3 +248,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+

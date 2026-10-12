@@ -7,6 +7,7 @@ import {
   ModelType,
   Move,
   PredictionResult,
+  RoundLog,
 } from './types';
 import { getBeatingMove, getLosingMove } from './rules';
 
@@ -350,3 +351,26 @@ export function updateModel(
     order2CorrectPredictions: o2Correct,
   };
 }
+
+/**
+ * Reconstructs an AdaptiveAIState and history array from previous round logs.
+ */
+export function reconstructAiState(
+  logs: readonly RoundLog[],
+  difficulty: Difficulty
+): { aiState: AdaptiveAIState; history: Move[] } {
+  let state = createAdaptiveAI(difficulty);
+  const history: Move[] = [];
+  for (const log of logs) {
+    state = updateModel(
+      state,
+      log.opponentMove,
+      log.predictedMove,
+      log.modelUsed,
+      history
+    );
+    history.push(log.opponentMove);
+  }
+  return { aiState: state, history };
+}
+

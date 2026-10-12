@@ -1,18 +1,24 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { Move, HandClassificationResult, classifyHandGesture, Difficulty } from '../ai';
-import { RefreshCw, AlertCircle, Zap, ShieldCheck, Play, Sparkles } from 'lucide-react';
+import { RefreshCw, AlertCircle, Zap, ShieldCheck, Play, Sparkles, ArrowLeft, LogOut } from 'lucide-react';
 import { sounds } from '../sound';
 
 interface CameraGameProps {
   difficulty: Difficulty;
   onPlayMove: (move: Move) => void;
+  onBackToHome: () => void;
   disabled?: boolean;
 }
 
 export type TriggerMode = 'instant' | '1s' | '3s';
 
-export const CameraGame: React.FC<CameraGameProps> = ({ difficulty, onPlayMove, disabled = false }) => {
+export const CameraGame: React.FC<CameraGameProps> = ({
+  difficulty,
+  onPlayMove,
+  onBackToHome,
+  disabled = false,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
@@ -309,9 +315,13 @@ export const CameraGame: React.FC<CameraGameProps> = ({ difficulty, onPlayMove, 
     };
   }, [disabled, countdown, triggerMode, evaluateAndDispatchMove]);
 
-  // Keyboard shortcut Space
+  // Keyboard shortcut Space & Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onBackToHome();
+        return;
+      }
       if (e.code === 'Space') {
         e.preventDefault();
         if (triggerMode === 'instant') {
@@ -323,7 +333,7 @@ export const CameraGame: React.FC<CameraGameProps> = ({ difficulty, onPlayMove, 
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [triggerMode, evaluateAndDispatchMove, startShootCountdown]);
+  }, [triggerMode, evaluateAndDispatchMove, startShootCountdown, onBackToHome]);
 
   const getMoveEmoji = (move: Move | null) => {
     switch (move) {
@@ -340,13 +350,41 @@ export const CameraGame: React.FC<CameraGameProps> = ({ difficulty, onPlayMove, 
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-6 flex flex-col items-center">
+      {/* Top Navigation & Exit Bar */}
+      <div className="w-full max-w-2xl flex items-center justify-between mb-4">
+        <button
+          id="camera-back-to-home-btn"
+          onClick={onBackToHome}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-white/10 text-xs font-semibold transition-all hover:-translate-x-0.5"
+          title="Return to Home Page"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Home</span>
+        </button>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-white/15 text-xs font-mono text-neutral-300">
+          <span>Vision AI Mode:</span>
+          <span className="text-white font-bold uppercase">{difficulty}</span>
+        </div>
+
+        <button
+          id="camera-exit-game-btn"
+          onClick={onBackToHome}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-semibold transition-all hover:scale-105"
+          title="Exit game and return to home page"
+        >
+          <LogOut className="w-3.5 h-3.5 text-rose-400" />
+          <span>Exit Game</span>
+        </button>
+      </div>
+
       {/* Top Controls Bar */}
       <div className="w-full max-w-2xl flex flex-wrap items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2 text-xs text-neutral-400">
           <ShieldCheck className="w-4 h-4 text-white" />
           <span>High-Speed 60fps Detection</span>
           <span className="text-neutral-700">|</span>
-          <span className="font-mono text-[11px] text-white">AI: {difficulty.toUpperCase()}</span>
+          <span className="font-mono text-[11px] text-white">Press Esc to Exit</span>
         </div>
 
         {/* Mode Selector Tabs */}

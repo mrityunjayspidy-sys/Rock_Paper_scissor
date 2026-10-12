@@ -61,4 +61,57 @@ describe('RoundLogger', () => {
     expect(csvStr).toContain('Round,OpponentMove,PredictedMove,BotMove,Result,ModelUsed,PredictionCorrect,DecisionLatencyMs,Timestamp');
     expect(csvStr).toContain('1,scissors,scissors,rock,lose,order-1,true,0.250');
   });
+
+  it('persists and retrieves round logs correctly', async () => {
+    const memoryStore: Record<string, string> = {};
+    const mockStorage = {
+      getItem: (key: string) => memoryStore[key] ?? null,
+      setItem: (key: string, value: string) => {
+        memoryStore[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete memoryStore[key];
+      },
+      clear: () => {
+        Object.keys(memoryStore).forEach((k) => delete memoryStore[k]);
+      },
+    };
+
+    // Assign mock to global
+    // @ts-expect-error Mocking window and localStorage in node test
+    global.window = {};
+    // @ts-expect-error Mocking window and localStorage in node test
+    global.localStorage = mockStorage;
+
+    const testLogs: RoundLog[] = [
+      {
+        roundNumber: 1,
+        opponentMove: 'rock',
+        predictedMove: 'paper',
+        botMove: 'paper',
+        result: 'lose',
+        modelUsed: 'cold-start',
+        predictionCorrect: false,
+        decisionLatencyMs: 0.1,
+        timestamp: Date.now(),
+      },
+    ];
+
+    const { saveLogs, loadSavedLogs, clearSavedLogs } = await import('../src/ai/logger');
+    const { reconstructAiState } = await import('../src/ai/ai');
+
+    saveLogs(testLogs);
+    const loaded = loadSavedLogs();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].opponentMove).toBe('rock');
+
+    const reconstructed = reconstructAiState(loaded, 'normal');
+    expect(reconstructed.history).toEqual(['rock']);
+    expect(reconstructed.aiState.roundCount).toBe(1);
+
+    clearSavedLogs();
+    expect(loadSavedLogs()).toHaveLength(0);
+  });
 });
+
+

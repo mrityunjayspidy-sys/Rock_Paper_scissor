@@ -1,17 +1,30 @@
 import React from 'react';
-import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight, Flame, Shield, Zap } from 'lucide-react';
-import { Difficulty } from '../ai';
+import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight, Flame, Shield, Zap, Play } from 'lucide-react';
+import { Difficulty, SummaryStats, RoundLog } from '../ai';
+import { HomeStats } from './HomeStats';
 
 interface ModeSelectorProps {
   difficulty: Difficulty;
   onSelectDifficulty: (d: Difficulty) => void;
   onSelectMode: (mode: 'camera' | 'nocamera') => void;
+  stats: SummaryStats;
+  logs: readonly RoundLog[];
+  onOpenStats: () => void;
+  onResetStats: () => void;
+  onDownloadJSON: () => void;
+  onDownloadCSV: () => void;
 }
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({
   difficulty,
   onSelectDifficulty,
   onSelectMode,
+  stats,
+  logs,
+  onOpenStats,
+  onResetStats,
+  onDownloadJSON,
+  onDownloadCSV,
 }) => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[80vh] text-center">
@@ -88,8 +101,17 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         </div>
       </div>
 
-      {/* Mode Selection Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+      {/* Mode Selection Cards (Playing Block) */}
+      <div className="w-full max-w-3xl mb-4 text-center">
+        <span className="text-xs uppercase tracking-widest text-neutral-400 font-mono font-bold block mb-1">
+          Start Playing • Select Input Mode
+        </span>
+        <p className="text-xs text-neutral-400 mb-6">
+          Choose between gesture camera detection or keyboard shortcuts to begin your match against the AI.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mb-12">
         {/* Camera Mode */}
         <button
           onClick={() => onSelectMode('camera')}
@@ -154,6 +176,17 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
           </div>
         </button>
       </div>
+
+      {/* Match Statistics & AI Telemetry Report (Below the Playing Block) */}
+      <HomeStats
+        stats={stats}
+        logs={logs}
+        difficulty={difficulty}
+        onOpenStats={onOpenStats}
+        onResetStats={onResetStats}
+        onDownloadJSON={onDownloadJSON}
+        onDownloadCSV={onDownloadCSV}
+      />
     </div>
   );
 };

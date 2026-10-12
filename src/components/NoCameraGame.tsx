@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { Move, Difficulty } from '../ai';
 import { sounds } from '../sound';
 
 interface NoCameraGameProps {
   difficulty: Difficulty;
   onPlayMove: (move: Move) => void;
+  onBackToHome: () => void;
   disabled?: boolean;
 }
 
@@ -36,7 +38,12 @@ const MOVE_CARDS: MoveCardDef[] = [
   },
 ];
 
-export const NoCameraGame: React.FC<NoCameraGameProps> = ({ difficulty, onPlayMove, disabled = false }) => {
+export const NoCameraGame: React.FC<NoCameraGameProps> = ({
+  difficulty,
+  onPlayMove,
+  onBackToHome,
+  disabled = false,
+}) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (disabled) return;
@@ -50,12 +57,14 @@ export const NoCameraGame: React.FC<NoCameraGameProps> = ({ difficulty, onPlayMo
       } else if (key === 's') {
         sounds.playTick(700);
         onPlayMove('scissors');
+      } else if (e.key === 'Escape') {
+        onBackToHome();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [disabled, onPlayMove]);
+  }, [disabled, onPlayMove, onBackToHome]);
 
   const handleCardClick = (move: Move) => {
     if (disabled) return;
@@ -64,17 +73,41 @@ export const NoCameraGame: React.FC<NoCameraGameProps> = ({ difficulty, onPlayMo
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-10 flex flex-col items-center">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-white/15 text-xs font-mono text-neutral-300 mb-3">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 flex flex-col items-center">
+      {/* Top Navigation & Exit Bar */}
+      <div className="w-full max-w-3xl flex items-center justify-between mb-8">
+        <button
+          id="nocamera-back-to-home-btn"
+          onClick={onBackToHome}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-white/10 text-xs font-semibold transition-all hover:-translate-x-0.5"
+          title="Return to Home Page"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Home</span>
+        </button>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-white/15 text-xs font-mono text-neutral-300">
           <span>AI Difficulty:</span>
           <span className="text-white font-bold uppercase">{difficulty}</span>
         </div>
+
+        <button
+          id="nocamera-exit-game-btn"
+          onClick={onBackToHome}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-semibold transition-all hover:scale-105"
+          title="Exit game and return to home page"
+        >
+          <LogOut className="w-3.5 h-3.5 text-rose-400" />
+          <span>Exit Game</span>
+        </button>
+      </div>
+
+      <div className="text-center mb-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading mb-2">
           Make Your Move
         </h2>
         <p className="text-sm text-neutral-400">
-          Tap a card or press shortcut key <span className="font-mono text-white font-bold">(R, P, S)</span>
+          Tap a card or press shortcut key <span className="font-mono text-white font-bold">(R, P, S)</span> • Esc to exit
         </p>
       </div>
 

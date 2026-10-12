@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, BarChart3, RotateCcw, Video, Keyboard, Flame, Zap, Shield } from 'lucide-react';
+import { Sparkles, BarChart3, RotateCcw, Video, Keyboard, Flame, Zap, Shield, LogOut } from 'lucide-react';
 import { SummaryStats, Difficulty } from '../ai';
 
 interface HeaderProps {
@@ -10,6 +10,8 @@ interface HeaderProps {
   onSelectDifficulty: (d: Difficulty) => void;
   onOpenStats: () => void;
   onReset: () => void;
+  onExitGame?: () => void;
+  isHomePage?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectDifficulty,
   onOpenStats,
   onReset,
+  onExitGame,
+  isHomePage = false,
 }) => {
   return (
     <header className="w-full border-b border-white/10 bg-black/85 backdrop-blur-xl sticky top-0 z-40 px-4 py-3.5">
@@ -112,23 +116,25 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={onSwitchMode}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-white/15 transition-all hover:border-white/30"
-            title="Switch input mode"
-          >
-            {mode === 'camera' ? (
-              <>
-                <Video className="w-3.5 h-3.5 text-white" />
-                <span>Camera</span>
-              </>
-            ) : (
-              <>
-                <Keyboard className="w-3.5 h-3.5 text-white" />
-                <span>No Camera</span>
-              </>
-            )}
-          </button>
+          {!isHomePage && (
+            <button
+              onClick={onSwitchMode}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-white/15 transition-all hover:border-white/30"
+              title="Switch input mode"
+            >
+              {mode === 'camera' ? (
+                <>
+                  <Video className="w-3.5 h-3.5 text-white" />
+                  <span>Camera</span>
+                </>
+              ) : (
+                <>
+                  <Keyboard className="w-3.5 h-3.5 text-white" />
+                  <span>No Camera</span>
+                </>
+              )}
+            </button>
+          )}
 
           <button
             onClick={onOpenStats}
@@ -145,6 +151,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <RotateCcw className="w-4 h-4" />
           </button>
+
+          {!isHomePage && onExitGame && (
+            <button
+              id="header-exit-game-btn"
+              onClick={onExitGame}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 transition-all hover:scale-105"
+              title="Exit game session and return to home page"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Exit Game</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

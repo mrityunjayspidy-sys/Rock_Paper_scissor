@@ -1,225 +1,271 @@
-# Rock-Paper-Scissors Adaptive AI ✊✋✌️
+# Rock-Paper-Scissors AI: Adaptive Markov Engine & Probabilistic Opponent Modeller ✊✋✌️
 
-> **Opponent-Modeling Adaptive Markov AI Engine with MediaPipe Vision & Instant Auto-Detect Mode**
+> **Multi-Layer AI System: Constraint-Satisfaction Adversary, Symbolic Strategy Detection, Bayesian Opponent Modeling, & Vision Interface**
 > 
-> *Made with Love and Code by **Mrityunjay***
+> *Developed by **Mrityunjay***
 
-## 📌 Problem Statement
-
-In competitive zero-sum non-cooperative games like Rock-Paper-Scissors, pure Nash equilibrium dictates playing moves uniformly at random ($P = 1/3$). However, human decision-making consistently violates stationarity and randomness due to cognitive heuristics (e.g., win-stay/lose-shift, cyclic patterns, gambler's fallacy, and recency bias). 
-
-The goal of this project is to construct a **real-time, adaptive opponent-modeling AI engine** that learns and predicts human player tendencies dynamically while playing, rapidly counters habit shifts using exponential memory decay, and pairs with a real-time computer vision interface for seamless interaction.
+[![Tests](https://img.shields.io/badge/pytest-21%20passed-brightgreen.svg)](#-test-suites)
+[![TypeScript](https://img.shields.io/badge/vitest-18%20passed-blue.svg)](#-test-suites)
+[![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
 
 ---
 
-## 🌟 Key Highlights
+## 📌 Executive Summary & Architecture Overview
 
-- **Adaptive Opponent Modeling**: Real-time multi-order Markov transition frequency matrices — Order-1 ($P(m_t \mid m_{t-1})$) and Order-2 ($P(m_t \mid m_{t-2}, m_{t-1})$).
-- **Exponential Memory Decay ($\gamma = 0.94$)**: Dynamically discounts older rounds to rapidly adapt to human counter-strategies.
-- **Dynamic Rolling Accuracy Model Selection**: Evaluates rolling accuracy over a sliding window ($W=20$) and dynamically executes the superior predictor.
-- **Client-Side MediaPipe Vision**: Live 60fps hand landmark tracking with a scale-invariant geometric finger-curl classifier.
-- **Instant Auto-Detect Mode**: Hands-free camera play — hold a gesture for 14 frames (~0.25s) and the AI automatically triggers and counters.
-- **Luxury Dark Monochrome UI**: Obsidian black design, glassmorphism HUD, Web Audio sound effects, and canvas confetti.
-- **Statistical Benchmark Suite**: $N=1000$ rounds per strategy with CSV/JSON exports, latency profiling, and technical PDF report generation.
+This project extends an adaptive Rock-Paper-Scissors game into a comprehensive **Probabilistic Opponent Modeller** encompassing three AI layers:
 
----
+1. **Layer 1: Constraint-Satisfaction (CSP) Adversary (`csp_adversary.py`)**  
+   A constraint-based move generator implementing backtracking search with forward checking, chunk stitching, and entropy maximization. It synthesizes adversarial move sequences guaranteed to have zero triple repeats, global and local move balance ($\pm 1$), and bounded order-1 transition probabilities ($P(m_t \mid m_{t-1}) \le 0.45$, empirical entropy $H \approx 1.585$ bits). Used to rigorously stress-test opponent predictors.
 
-## 📂 Project Structure
+2. **Layer 2: Knowledge & Reasoning Layer (`strategy_rules.py`)**  
+   Symbolic reasoning over recent game history (sliding window $W \in [10, 20]$) encoding formal human cognitive heuristics:
+   - **Win-Stay / Lose-Shift (WSLS)** and variants (Lose-Stay, Win-Shift)
+   - **Periodic Cycling** ($R \to P \to S$ or reverse with period detection)
+   - **Copying / Counter-Copying** (reactive mirroring of previous moves)
+   - **Biased / Constant Play** (skewed frequency detection)
+   Outputs ranked interpretations with confidence scores $[0, 1]$ and human-readable explanations. Powering the `RuleBasedAgent`.
 
-```
-rock-paper-scissors-ai/
-├── src/            # source code (UI, Markov AI engines, simulation runners)
-├── tests/          # test cases (Vitest & Pytest) & sample input fixtures
-├── docs/           # report.pdf, screenshots, plots & telemetry datasets
-├── README.md       # problem, approach, how-to-run, sample I/O
-├── requirements.txt# dependencies (or equivalent package.json)
-├── .gitignore      # git ignore rules
-└── LICENSE         # MIT License
-```
-
-### Detailed File Organization:
-
-```
-.
-├── src/                          # Application & Engine Source Code
-│   ├── ai/                       # Markov Opponent-Modeling AI Engine (TS & Python)
-│   │   ├── ai.ts                 # Multi-order Markov engine, decay, & model selection
-│   │   ├── rules.ts              # Game resolution & counter move calculation
-│   │   ├── classifier.ts         # Scale-invariant hand landmark finger-curl classifier
-│   │   ├── logger.ts             # Telemetry round logger & CSV/JSON export
-│   │   ├── types.ts              # Shared TypeScript definitions
-│   │   ├── index.ts              # Module barrel exports
-│   │   └── rps_ai.py             # Python Markov AI engine mirror
-│   ├── components/               # React UI Components
-│   │   ├── Header.tsx            # Persistent HUD (Win-rate pill & difficulty toggle)
-│   │   ├── ModeSelector.tsx      # Mode selection menu (Camera vs No-Camera)
-│   │   ├── NoCameraGame.tsx      # Large tactile cards + R/P/S hotkeys
-│   │   ├── CameraGame.tsx        # MediaPipe Vision AI + Instant Auto-Detect
-│   │   ├── RevealArena.tsx       # Showdown reveal & audio effects
-│   │   └── StatsView.tsx         # Full telemetry history table & dataset exports
-│   ├── sound.ts                  # Synthesized Web Audio API sound effects
-│   ├── index.css                 # Dark luxury monochrome design system
-│   ├── App.tsx                   # Main application controller
-│   ├── main.tsx                  # React DOM entrypoint
-│   ├── simulate.ts               # TypeScript benchmark simulation runner
-│   └── simulate.py               # Python benchmark runner, plotter, & PDF builder
-├── tests/                        # Automated Test Suites & Sample Inputs
-│   ├── ai.test.ts                # Vitest Markov engine unit tests
-│   ├── classifier.test.ts        # Vitest hand landmark classifier tests
-│   ├── logger.test.ts            # Vitest telemetry logger tests
-│   ├── rules.test.ts             # Vitest RPS game rule tests
-│   ├── test_ai.py                # Pytest Markov engine tests
-│   ├── test_rules.py             # Pytest game rule tests
-│   └── sample_inputs/            # Sample input datasets & fixtures
-│       ├── benchmark_strategies.json
-│       ├── sample_hand_landmarks.json
-│       └── sample_game_sessions.json
-├── docs/                         # Technical Report, Screenshots, Plots & Data
-│   ├── report.pdf                # Publication-quality technical documentation PDF
-│   ├── screenshots/              # UI gameplay and mode screenshots
-│   │   ├── camera_mode.png
-│   │   ├── manual_cards_mode.png
-│   │   └── statistics_dashboard.png
-│   ├── plots/                    # High-resolution benchmark figures (300 DPI)
-│   │   ├── win_rate_comparison.png
-│   │   ├── cumulative_accuracy_progression.png
-│   │   ├── transition_matrix_heatmap.png
-│   │   └── decision_latency_distribution.png
-│   └── report-data/              # Benchmark simulation CSV & JSON datasets
-│       ├── summary_report.json / .csv
-│       ├── uniform_random_1000_rounds.json / .csv
-│       ├── fixed_rock_1000_rounds.json / .csv
-│       ├── cyclic_1000_rounds.json / .csv
-│       └── win_stay_lose_shift_1000_rounds.json / .csv
-├── README.md                     # Technical overview & documentation
-├── requirements.txt              # Python dependencies
-├── package.json                  # Node.js dependencies & scripts
-├── tsconfig.json                 # TypeScript compiler configuration
-├── vite.config.ts                # Vite build and development configuration
-├── index.html                    # Web entry HTML
-├── .gitignore                    # Git ignore definitions
-└── LICENSE                       # MIT License
-```
+3. **Layer 3: Applied & Responsible AI (`bayesian_agent.py`, `docs/responsible_ai.md`)**  
+   Probabilistic reasoning under uncertainty:
+   - **Dirichlet-Multinomial Prior Updating**: Conjugate Bayesian updates $\boldsymbol{\alpha}_{t} = \boldsymbol{\alpha}_0 + \mathbf{c}_t$.
+   - **Context-Aware Markov Dirichlet Models**: Order-1 transition matrices with independent Dirichlet priors per context.
+   - **Adaptive Model Blending**: Dynamic log-loss / rolling accuracy weighting between global and contextual models.
+   - **Decision Theory**: Expected utility maximization $\arg\max_a \sum_{s} P(s) \cdot U(a, s)$.
+   - **Explainability Audit Trail**: Round-by-round logging of predicted distributions $(P(R), P(P), P(S))$, confidence, and decision latency.
+   - **Responsible AI Protocols**: Explicit zero-lookahead fair play assertions, opt-in data consent, local-only storage, and right-to-erasure.
 
 ---
 
-## 🔬 Approach & Mathematical Formulation
+## 🏛️ System Architecture
 
-### 1. Markov Transition Modeling
-The AI treats human opponent play as a non-stationary Markov decision process.
+### Mermaid Diagram
+```mermaid
+graph TD
+    subgraph Environment ["Game Loop & Environment (Zero Lookahead Guaranteed)"]
+        GL[Round Execution Engine]
+        VAL[Fair-Play Validator: Simultaneous Choice Assertion]
+    end
 
-- **Order-1 Transition Probability**:
-  $$P_1(m_t \mid m_{t-1}) = \frac{C(m_{t-1}, m_t) + \alpha}{\sum_{m'} C(m_{t-1}, m') + 3\alpha}$$
-  where $\alpha = 0.05$ is Laplace smoothing.
+    subgraph Layer1 ["Layer 1: CSP Adversary Engine (csp_adversary.py)"]
+        CSP_GEN[Backtracking Search + Forward Checking]
+        CONSTR1[Constraint 1: Balanced Moves +-1]
+        CONSTR2[Constraint 2: No Triple Repeats]
+        CONSTR3[Constraint 3: Transition Probability <= 0.45]
+        STITCH[Chunk Stitcher & Min-Conflicts Fallback]
+        ADV_AGENT[AdversaryAgent]
+        CSP_GEN --> CONSTR1 & CONSTR2 & CONSTR3 --> STITCH --> ADV_AGENT
+    end
 
-- **Order-2 Transition Probability**:
-  $$P_2(m_t \mid m_{t-2}, m_{t-1}) = \frac{C(m_{t-2}, m_{t-1}, m_t) + \alpha}{\sum_{m'} C(m_{t-2}, m_{t-1}, m') + 3\alpha}$$
+    subgraph Layer2 ["Layer 2: Knowledge & Reasoning (strategy_rules.py)"]
+        HIST_WIN[Sliding Window History W=15]
+        R_WSLS[Win-Stay / Lose-Shift Rule]
+        R_CYC[Periodic Cycling Rule]
+        R_COP[Copying / Counter-Copying Rule]
+        R_BIAS[Biased Frequency Rule]
+        DETECTOR[StrategyDetector: Ranked Hypotheses + Confidence]
+        RULE_AGENT[RuleBasedAgent]
+        HIST_WIN --> R_WSLS & R_CYC & R_COP & R_BIAS --> DETECTOR --> RULE_AGENT
+    end
 
-### 2. Exponential Memory Decay ($\gamma = 0.94$)
-At each timestep $t$, prior observations are discounted by factor $\gamma$:
-$$C_{t+1}(s, a) = \gamma \cdot C_t(s, a) + \mathbb{I}(s = s_t, a = a_t)$$
-This enables the AI to rapidly discard stale habits when the player adapts.
+    subgraph Layer3 ["Layer 3: Applied Bayesian Inference (bayesian_agent.py)"]
+        PRIOR[Dirichlet Prior alpha_0]
+        GLOBAL_POST[Global Dirichlet-Multinomial Posterior]
+        MARKOV_POST[Order-1 Contextual Dirichlet Posteriors]
+        BLEND[Adaptive Model Blending: Rolling Log-Loss]
+        EXP_UTIL[Expected Payoff Best Response]
+        EXPLAIN[Explainability Logger: P_R, P_P, P_S]
+        PRIOR --> GLOBAL_POST & MARKOV_POST --> BLEND --> EXP_UTIL
+        EXP_UTIL --> EXPLAIN
+    end
 
-### 3. Dynamic Model Selection & $\varepsilon$-Greedy Exploration
-- Tracks rolling accuracy over a sliding window ($W=20$ rounds).
-- If Order-2 demonstrates superior rolling accuracy or equal accuracy with higher confidence, the engine dynamically executes Order-2.
-- An exploration parameter ($\varepsilon = 0.02$ on Hard, $\varepsilon = 0.10$ on Normal) prevents deterministic predictability.
+    subgraph Interface ["Interactive Client & Vision (MediaPipe + React)"]
+        MP[MediaPipe Hand Landmark Tracker]
+        CURL[Geometric Finger-Curl Classifier]
+        HUD[Dark Luxury UI + Live Telemetry HUD]
+    end
+
+    ADV_AGENT --> GL
+    RULE_AGENT --> GL
+    EXP_UTIL --> GL
+    GL --> VAL
+    VAL --> HIST_WIN
+    VAL --> GLOBAL_POST & MARKOV_POST
+```
+
+### ASCII Architecture Diagram
+```
++=============================================================================+
+|                       PROBABILISTIC OPPONENT MODELLER                       |
++=============================================================================+
+|                                                                             |
+|  [ LAYER 1: CSP ADVERSARY ] (csp_adversary.py)                              |
+|    - Backtracking with Forward Checking & Chunk Stitching (N=1000)          |
+|    - Constraints: Balanced (333/333/334), No Triple Repeats, P(m'|m) <= 0.45|
+|    - Max-Entropy Value Ordering (H = 1.585 bits / 1.585 bits)               |
+|    --> Produces: AdversaryAgent (Unexploitable Stress-Testing Baseline)     |
+|                                                                             |
+|  [ LAYER 2: KNOWLEDGE & REASONING ] (strategy_rules.py)                     |
+|    - Symbolic Rule Engine over Sliding History Window (W = 10..20)          |
+|    - Rules: Win-Stay/Lose-Shift | Periodic Cycling | Copying | Biased Play  |
+|    - Confidence Scoring [0.0, 1.0] + Human-Readable Explanations            |
+|    --> Produces: StrategyDetector & RuleBasedAgent                          |
+|                                                                             |
+|  [ LAYER 3: APPLIED BAYESIAN INFERENCE ] (bayesian_agent.py)                |
+|    - Dirichlet(alpha) Conjugate Prior Updating (Global & Order-1 Contexts)  |
+|    - Dynamic Model Blending based on Brier Score / Log-Loss                 |
+|    - Decision Theory: Optimal Expected Payoff argmax E[U(a, s)]             |
+|    - Explainability Audit Trail: [P(R), P(P), P(S)] logged every round      |
+|    - Responsible AI: docs/responsible_ai.md (Fair Play & Consent Protocols) |
+|    --> Produces: BayesianAgent (Primary Predictor)                          |
+|                                                                             |
+|  [ BENCHMARK SUITE & EXPERIMENT RUNNER ] (run_experiments.py)               |
+|    - Monte Carlo Trials: 1000 Rounds x 20 Random Seeds                     |
+|    - Opponents: Random, Rule-Based, Bayesian (Self), CSP, Biased, Cycler... |
+|    - Outputs: results/summary.csv & high-res analytical plots               |
++=============================================================================+
+```
 
 ---
 
-## 📊 Benchmark Results ($N=1000$ Rounds Each)
+## 📊 Empirical Benchmark Results (1,000 Rounds × 20 Seeds)
 
-| Opponent Strategy | Behavioral Pattern | Total Rounds | Bot Win Rate | Player Win Rate | Tie Rate | Prediction Accuracy | Decision Latency |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Uniform Random** | $P(\text{move}) = 1/3$ | 1000 | **35.3%** | 32.5% | 32.2% | **35.5%** | 0.0028 ms |
-| **Fixed Rock** | Inflexible $m_t = \text{Rock}$ | 1000 | **92.9%** | 3.5% | 3.6% | **100.0%** | 0.0027 ms |
-| **Cyclic** | Rock $\to$ Paper $\to$ Scissors | 1000 | **93.2%** | 3.5% | 3.3% | **99.7%** | 0.0027 ms |
-| **Reactive (WSLS)** | Win-Stay, Lose-Shift | 1000 | **87.3%** | 6.8% | 5.9% | **92.5%** | 0.0028 ms |
+Results generated by `run_experiments.py` evaluating the **Bayesian Agent** as the primary predictor across 20 distinct random seeds:
+
+| Opponent Strategy | Theoretical Expectation | Win Rate (Mean ± Std) | Loss Rate (Mean ± Std) | Tie Rate (Mean ± Std) | Prediction Accuracy |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Uniform Random** | Nash Equilibrium ($33.3\%$) | **33.36% ± 1.60%** | 33.53% ± 1.36% | 33.11% ± 1.36% | 33.04% ± 1.44% |
+| **Rule-Based Agent** | Detectable Symbolic Patterns | **41.07% ± 2.00%** | 29.74% ± 1.50% | 29.19% ± 1.87% | 41.56% ± 1.79% |
+| **Bayesian Agent (Self)**| Symmetric Bayesian Play | **33.53% ± 1.34%** | 33.25% ± 1.60% | 33.22% ± 1.53% | 33.51% ± 1.60% |
+| **CSP Adversary** | High-Entropy Pseudo-Random | **46.94% ± 1.94%** | 15.29% ± 1.45% | 37.78% ± 2.62% | 48.75% ± 1.55% |
+| **Biased (70% Rock)** | Exploitable Marginal Distribution| **69.51% ± 1.25%** | 15.21% ± 1.00% | 15.28% ± 0.92% | 69.67% ± 1.19% |
+| **Cyclic ($R \to P \to S$)** | Deterministic Periodic Pattern | **99.57% ± 0.06%** | 0.18% ± 0.06% | 0.26% ± 0.07% | 99.80% ± 0.00% |
+| **Win-Stay / Lose-Shift**| Deterministic Reactive Heuristic | **98.44% ± 0.55%** | 1.10% ± 0.39% | 0.46% ± 0.17% | 98.14% ± 0.53% |
+
+### Key Experimental Insights & CSP Stress Test Interpretation
+
+1. **Nash Baseline Conformance**: Against pure `RandomAgent`, the Bayesian predictor attains $33.36\% \pm 1.60\%$ win rate and $33.04\% \pm 1.44\%$ prediction accuracy, validating that the predictor converges to the theoretical $1/3$ baseline against uncorrelated noise.
+2. **CSP Adversary Stress Testing**:
+   - The CSP adversary achieves **$100\%$ maximal transition entropy** ($H = 1.585$ bits out of $\log_2(3) = 1.585$) with an empirical maximum transition probability of $0.336$ (well below the $0.45$ constraint ceiling).
+   - Because the CSP adversary explicitly forbids triple repeats ($s_i \ne s_{i-1}$ when $s_{i-1} = s_{i-2}$), the Bayesian contextual model detects this negative autocorrelation, boosting win rate to $46.94\%$ and suppressing losses down to $15.29\%$. This proves the model's sensitivity to subtle statistical dependencies even in highly uniform sequences.
+3. **Near-Perfect Exploitation of Heuristics**: Deterministic heuristics (Cyclic, WSLS) are completely mastered ($>98.4\%$ win rate) within fewer than 15 rounds of posterior updates.
+
+---
+
+## 📈 Generated Visualizations (`results/`)
+
+Running `python run_experiments.py` automatically produces publication-grade figures in `results/`:
+
+1. **`results/probability_tracking.png`**:
+   - **Top Subplot**: Posterior tracking against a Biased opponent showing convergence of $P(\text{Rock}) \approx 0.70$ and $P(\text{Paper}) \approx 0.15$.
+   - **Bottom Subplot**: Posterior tracking against the CSP adversary illustrating uniform distribution hovering near $P \approx 0.33$.
+2. **`results/cumulative_winrate.png`**:
+   - Cumulative win rate trajectories over 1000 rounds across all 7 agent types, highlighting rapid learning curves.
+3. **`results/transition_heatmap.png`**:
+   - Empirical Markov transition matrices comparing the CSP adversary against human-like heuristics.
+
+---
+
+## 🛡️ Responsible AI & Fair Play (`docs/responsible_ai.md`)
+
+Full specifications are detailed in [docs/responsible_ai.md](file:///d:/FAI_Project/docs/responsible_ai.md). Key pillars include:
+
+1. **Zero-Lookahead Fair Play**:
+   - The game architecture enforces strict simultaneous play. Agents receive only historical rounds $H_{< t} = \{(a_\tau, s_\tau)\}_{\tau=1}^{t-1}$.
+   - Verified via automated runtime assertion:
+     ```python
+     assert len(history) == round_num - 1, "Fair Play Violation: Lookahead detected!"
+     ```
+2. **Informed Consent & Data Sovereignty**:
+   - An explicit opt-in dialog prompts players before collecting any move telemetry.
+   - When declined, telemetry is completely disabled and zero data is persisted.
+   - All data is stored purely in client-side `localStorage` or local files—no telemetry is ever transmitted to remote servers.
+   - Includes a one-click **"Clear All History"** function honoring the GDPR Right to Erasure.
+3. **Epistemic Uncertainty & Bias Acknowledgement**:
+   - Predictions are probabilistic estimates, not deterministic assertions.
+   - Opponent models trained on one individual cannot generalize to others; models reset cleanly between sessions to prevent demographic profiling.
 
 ---
 
 ## 🚀 How to Run
 
-### Prerequisites
-- **Node.js**: v18+ (tested on Node v20+)
-- **Python**: 3.9+ (tested on Python 3.14)
+### 1. Prerequisites
+- **Python 3.9+** (tested on Python 3.14)
+- **Node.js v18+** (tested on Node v20/v22)
 
-### 1. Install Dependencies
-
+### 2. Installation
 ```bash
-# Install Node / Web dependencies
-npm install
+# Clone the repository
+git clone https://github.com/mrityunjayspidy-sys/Rock_Paper_scissor.git
+cd Rock_Paper_scissor
 
-# Install Python dependencies
+# Install Python requirements
 pip install -r requirements.txt
+
+# Install Web / React dependencies
+npm install
 ```
 
-### 2. Launch Interactive Web Game (Vite)
+### 3. Run Experiments & Benchmark Suite
+```bash
+# Run 1000 rounds across 20 seeds (generates results/summary.csv and all plots):
+python run_experiments.py --seeds 20 --rounds 1000
 
+# Run a single quick seed:
+python run_experiments.py --seed 42 --rounds 1000
+
+# Launch interactive terminal demo with live strategy detector feedback:
+python run_experiments.py --interactive-demo
+```
+
+### 4. Run Automated Test Suites
+```bash
+# Run Python Pytest suite (21 unit tests: CSP, Strategy Rules, Bayesian updates):
+python -m pytest tests/
+
+# Run TypeScript Vitest suite (18 unit tests: Classifier, Markov AI, Rules, Logger):
+npm test
+```
+
+### 5. Launch Interactive Web App
 ```bash
 npm run dev
 ```
-Open **[http://localhost:3000](http://localhost:3000)** in your browser.
-
-### 3. Run Automated Tests
-
-```bash
-# Run TypeScript Vitest unit test suite (18+ tests):
-npm test
-
-# Run Python Pytest test suite:
-python -m pytest tests/
-```
-
-### 4. Run Benchmark Simulations & Generate Report
-
-```bash
-# Run Python benchmark simulation suite, generate plots & PDF report:
-python src/simulate.py
-
-# Run TypeScript simulation runner:
-npm run simulate
-```
-
-### 5. Production Web Build
-
-```bash
-npm run build
-```
+Open **[http://localhost:8000](http://localhost:8000)** in your browser for camera-based gesture play or manual tactile card play.
 
 ---
 
-## 💻 Sample Input / Output
-
-### Terminal Simulation Sample Output:
+## 📂 Repository File Structure
 
 ```
-======================================================================
-RUNNING ROCK-PAPER-SCISSORS BENCHMARK SUITE (N=1000 ROUNDS EACH)
-======================================================================
-Strategy: uniform_random         | Bot Win:  35.3% | Acc:  35.5% | Avg Lat: 0.0028ms
-Strategy: fixed_rock             | Bot Win:  92.9% | Acc: 100.0% | Avg Lat: 0.0027ms
-Strategy: cyclic                 | Bot Win:  93.2% | Acc:  99.7% | Avg Lat: 0.0027ms
-Strategy: win_stay_lose_shift    | Bot Win:  87.3% | Acc:  92.5% | Avg Lat: 0.0028ms
-
-All 4 benchmark plots successfully saved to: docs/plots
-Technical Report PDF successfully generated at: docs/report.pdf
-```
-
-### Telemetry Record Format (`RoundLog` JSON):
-
-```json
-{
-  "roundNumber": 42,
-  "opponentMove": "rock",
-  "predictedMove": "rock",
-  "botMove": "paper",
-  "result": "lose",
-  "modelUsed": "order-2",
-  "predictionCorrect": true,
-  "decisionLatencyMs": 0.003,
-  "timestamp": 1725375600000
-}
+.
+├── csp_adversary.py           # Layer 1: CSP move generator & AdversaryAgent
+├── strategy_rules.py          # Layer 2: Symbolic human strategy rules & StrategyDetector
+├── bayesian_agent.py          # Layer 3: Dirichlet prior updates, model blending & audit log
+├── opponents.py               # Benchmark agents (Random, WSLS, Cycler, Copier, Biased)
+├── run_experiments.py         # 20-seed Monte Carlo experiment runner & plotter
+├── docs/
+│   ├── responsible_ai.md      # Responsible AI treatise: Fair play, consent & ethics
+│   ├── report.pdf             # Technical project documentation PDF
+│   └── plots/                 # Benchmark charts & heatmaps
+├── results/                   # Generated experiment deliverables
+│   ├── summary.csv            # 20-seed mean ± std win/loss/accuracy metrics
+│   ├── probability_tracking.png # Bayesian posterior tracking over 1000 rounds
+│   ├── cumulative_winrate.png # Cumulative win rate progression curves
+│   └── transition_heatmap.png # Empirical transition matrix heatmaps
+├── tests/
+│   ├── test_csp.py            # Unit tests for CSP constraints & validator
+│   ├── test_strategy_rules.py # Unit tests for symbolic strategy rules
+│   ├── test_bayesian.py       # Unit tests for Bayesian Dirichlet posterior shifts
+│   ├── test_ai.py             # Unit tests for Markov AI engine
+│   └── test_rules.py          # Unit tests for game resolution logic
+├── src/                       # Web application & TypeScript engine
+│   ├── ai/                    # Markov AI engine, hand gesture classifier, logger
+│   ├── components/            # React HUD, Arena, Camera & Card game views
+│   ├── App.tsx                # React application entry
+│   └── main.tsx               # DOM bootstrap
+├── package.json               # Node.js dependencies and script runners
+├── requirements.txt           # Python scientific stack dependencies
+└── README.md                  # System documentation
 ```
 
 ---

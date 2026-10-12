@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Move, Outcome, ModelType, Difficulty } from '../ai';
 import confetti from 'canvas-confetti';
-import { Trophy, XCircle, MinusCircle, ArrowRight, Zap, Brain } from 'lucide-react';
+import { Trophy, XCircle, MinusCircle, ArrowRight, Zap, Brain, ArrowLeft, LogOut } from 'lucide-react';
 import { sounds } from '../sound';
 
 interface RevealArenaProps {
@@ -13,6 +13,7 @@ interface RevealArenaProps {
   outcome: Outcome;
   latencyMs: number;
   onNextRound: () => void;
+  onBackToHome?: () => void;
 }
 
 const MOVE_DATA: Record<Move, { emoji: string; name: string }> = {
@@ -30,6 +31,7 @@ export const RevealArena: React.FC<RevealArenaProps> = ({
   outcome,
   latencyMs,
   onNextRound,
+  onBackToHome,
 }) => {
   useEffect(() => {
     if (outcome === 'win') {
@@ -47,13 +49,17 @@ export const RevealArena: React.FC<RevealArenaProps> = ({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onBackToHome?.();
+        return;
+      }
       if (e.code === 'Space' || e.code === 'Enter') {
         onNextRound();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [outcome, onNextRound]);
+  }, [outcome, onNextRound, onBackToHome]);
 
   const getOutcomeBanner = () => {
     switch (outcome) {
@@ -165,15 +171,44 @@ export const RevealArena: React.FC<RevealArenaProps> = ({
         </div>
       </div>
 
-      {/* Next Round Button */}
-      <button
-        onClick={onNextRound}
-        className="px-10 py-4 rounded-2xl bg-white text-black hover:bg-neutral-200 font-bold text-lg font-heading shadow-xl shadow-white/10 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2.5"
-      >
-        <span>Play Next Round</span>
-        <ArrowRight className="w-5 h-5 text-black" />
-      </button>
-      <span className="text-xs text-neutral-500 mt-2.5 font-mono">Press Space or Enter</span>
+      {/* Action Buttons: Next Round, Back to Home, Exit Game */}
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
+        {onBackToHome && (
+          <button
+            id="reveal-back-home-btn"
+            onClick={onBackToHome}
+            className="px-5 py-3.5 rounded-2xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-white/10 text-sm font-semibold transition-all flex items-center gap-2 hover:-translate-y-0.5"
+            title="Return to home screen"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Home</span>
+          </button>
+        )}
+
+        <button
+          id="reveal-next-round-btn"
+          onClick={onNextRound}
+          className="px-8 py-3.5 rounded-2xl bg-white text-black hover:bg-neutral-200 font-bold text-base font-heading shadow-xl shadow-white/10 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2"
+        >
+          <span>Play Next Round</span>
+          <ArrowRight className="w-4 h-4 text-black" />
+        </button>
+
+        {onBackToHome && (
+          <button
+            id="reveal-exit-game-btn"
+            onClick={onBackToHome}
+            className="px-5 py-3.5 rounded-2xl bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 text-sm font-semibold transition-all flex items-center gap-2 hover:scale-105"
+            title="Exit game session and return to home page"
+          >
+            <LogOut className="w-4 h-4 text-rose-400" />
+            <span>Exit Game</span>
+          </button>
+        )}
+      </div>
+      <span className="text-xs text-neutral-500 mt-2 font-mono">
+        Space / Enter for Next Round • Esc to Exit
+      </span>
     </div>
   );
 };
