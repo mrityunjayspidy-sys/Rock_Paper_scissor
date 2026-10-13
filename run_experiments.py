@@ -1,34 +1,31 @@
+#!/usr/bin/env python3
 """
-Probabilistic Opponent Modeler: Experiment Runner & Evaluation Suite
-===================================================================
+Probabilistic Opponent Modeller: Scientific Experiment Runner & Benchmark Suite
+================================================================================
+Conducts multi-seed evaluation (N=1000 rounds x 20 seeds) of the probabilistic
+Bayesian opponent predictor against standard agent baselines:
+- Uniform Random (Nash Equilibrium Baseline)
+- Rule-Based Agent (Knowledge & Reasoning Layer)
+- Bayesian Agent (Self-play Symmetry)
+- Biased Play (70% Rock)
+- Cyclic Play (R -> P -> S deterministic sequence)
+- Win-Stay / Lose-Shift (WSLS heuristic)
+- Copier Opponent (Reactive Mirroring)
 
-AI Concept:
-This benchmark suite conducts multi-seed empirical stress-testing of the
-Probabilistic Opponent Modeler (Bayesian & Adaptive Markov inference) against:
-1. RandomAgent: Unbiased mixed strategy Nash equilibrium baseline.
-2. RuleBasedAgent: Knowledge-based symbolic strategy counter-play.
-3. BayesianAgent: Probabilistic Dirichlet-Markov predictive modeling.
-4. CSP AdversaryAgent: Constraint-satisfaction adversary with bounded transition predictability.
-5. Scripted Human Heuristics: Win-Stay/Lose-Shift, Cyclic, Biased, Copier.
-
-Deliverables Produced:
-- results/summary.csv: Mean +- Std metrics over N seeds and 1000 rounds.
-- results/probability_tracking.png: Posterior probability trajectory P(R), P(P), P(S).
-- results/cumulative_winrate.png: Cumulative win rate convergence curves.
-- results/transition_heatmap.png: Empirical transition matrix heatmaps.
+Generates:
+1. results/summary.csv (Statistical summary of mean +- std across all metrics)
+2. results/probability_tracking.png (Posterior belief tracking vs Biased & Random)
+3. results/cumulative_winrate.png (1000-round progression curves)
+4. results/transition_heatmap.png (Empirical transition matrix heatmaps)
 """
 
-from __future__ import annotations
 import os
 import sys
 import argparse
 import csv
 import time
-import math
-from typing import List, Dict, Any, Tuple
+from typing import Dict, List, Any, Tuple
 import numpy as np
-
-# Use non-interactive backend for headless plotting
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -42,11 +39,6 @@ from src.ai.strategy_rules import (
     resolve_outcome,
     RuleBasedAgent,
     StrategyDetector,
-)
-from src.ai.csp_adversary import (
-    AdversaryAgent,
-    CSPConstraintValidator,
-    CSPSequenceGenerator,
 )
 from src.ai.bayesian_agent import BayesianAgent
 from src.ai.opponents import (
@@ -67,45 +59,50 @@ def play_match(
     seed: int = 42,
 ) -> Dict[str, Any]:
     """
-    Plays a strict fair-play match of N rounds between predictor and opponent.
-    Strict sequential information boundary: predictor only receives history up to round t-1.
+    Executes a sequential match of `rounds` between a predictor and an opponent.
+    Strictly asserts zero-lookahead simultaneously committed moves.
     """
-    if hasattr(predictor, "reset"):
-        predictor.reset()
-    if hasattr(opponent, "reset"):
-        opponent.reset()
-
     pred_history: List[str] = []
     opp_history: List[str] = []
-
     pred_wins = 0
     opp_wins = 0
     ties = 0
     hits = 0
 
-    pred_win_progression: List[float] = []
     round_latencies: List[float] = []
+    pred_win_progression: List[float] = []
 
     for r in range(rounds):
-        # 1. FAIR PLAY ASSERTION:
-        assert len(opp_history) == r, f"Fair play violation at round {r}: history length mismatch"
+        # 1. Zero-Lookahead Fair Play assertion
+        assert len(pred_history) == r, f"Fair Play violation! History length {len(pred_history)} != {r}"
+        assert len(opp_history) == r, f"Fair Play violation! History length {len(opp_history)} != {r}"
 
-        # 2. Predictor decides move based strictly on past history
-        t_start = time.perf_counter()
-        pred_move = predictor.play(opp_history)
-        t_latency = (time.perf_counter() - t_start) * 1000.0
-        round_latencies.append(t_latency)
-
-        # 3. Opponent decides move
-        if hasattr(opponent, "play"):
-            if type(opponent) in (WinStayLoseShiftOpponent, CopierOpponent, RuleBasedAgent):
-                opp_move = opponent.play(pred_history, opp_history)
-            else:
-                opp_move = opponent.play(pred_history)
+        # 2. Predictor commits action
+        t0 = time.perf_counter()
+        if hasattr(predictor, "play"):
+            # Predictor chooses counter move based strictly on past opponent history
+            pred_move = predictor.play(opp_history)
+        elif hasattr(predictor, "predict_and_counter"):
+            pred_move = predictor.predict_and_counter(opp_history)
         else:
-            opp_move = opponent(r)
+            pred_move = "rock"
+        latency = (time.perf_counter() - t0) * 1000.0
+        round_latencies.append(latency)
 
-        # 4. Resolve outcome
+        # 3. Opponent commits action (simultaneous reveal)
+        if isinstance(opponent, WinStayLoseShiftOpponent):
+            opp_move = opponent.play(pred_history, opp_history)
+        elif hasattr(opponent, "play"):
+            opp_move = opponent.play(pred_history)
+        else:
+            opp_move = "rock"
+
+        # 4. Check prediction accuracy if BayesianAgent
+        if hasattr(predictor, "last_predicted_move") and predictor.last_predicted_move is not None:
+            if predictor.last_predicted_move == opp_move:
+                hits += 1
+
+        # 5. Evaluate simultaneous outcome
         outcome = resolve_outcome(pred_move, opp_move)
         if outcome == "win":
             pred_wins += 1
@@ -114,18 +111,12 @@ def play_match(
         else:
             ties += 1
 
-        # Check prediction hit if predictor logged expectation
-        if hasattr(predictor, "audit_logs") and predictor.audit_logs:
-            last_audit = predictor.audit_logs[-1]
-            if last_audit.predicted_opponent_move == opp_move:
-                hits += 1
-        elif hasattr(predictor, "last_predicted_move"):
-            if predictor.last_predicted_move == opp_move:
-                hits += 1
-
-        # 5. Update histories & predictor learning model
+        # 6. Post-reveal learning update
         if hasattr(predictor, "update"):
-            predictor.update(opp_move, opp_history)
+            if isinstance(predictor, BayesianAgent):
+                predictor.update(opp_move, opp_history)
+            else:
+                predictor.update(opp_move, pred_move)
 
         pred_history.append(pred_move)
         opp_history.append(opp_move)
@@ -161,7 +152,7 @@ def run_benchmark_matrix(
         "Random": lambda s: RandomAgent(seed=s),
         "Rule-Based": lambda s: RuleBasedAgent(seed=s),
         "Bayesian (Self)": lambda s: BayesianAgent(seed=s),
-        "CSP Adversary": lambda s: AdversaryAgent(sequence_length=rounds, seed=s),
+        "Copier": lambda s: CopierOpponent(seed=s),
         "Biased (70% Rock)": lambda s: BiasedOpponent(seed=s),
         "Cyclic (R->P->S)": lambda s: CyclicOpponent(),
         "Win-Stay/Lose-Shift": lambda s: WinStayLoseShiftOpponent(seed=s),
@@ -234,67 +225,28 @@ def run_benchmark_matrix(
     return results_table
 
 
-def run_csp_stress_test(rounds: int = 1000, seed: int = 42, output_dir: str = "results"):
-    """
-    Stress-tests the predictor against the CSP adversary sequence.
-    Demonstrates constraint satisfaction and convergence near the ~33.3% Nash baseline.
-    """
-    print("\n" + "-" * 80)
-    print("LAYER 1 STRESS TEST: CSP ADVERSARY VALIDATION & INFERENCE CONVERGENCE")
-    print("-" * 80)
-
-    # Generate and validate CSP sequence
-    adversary = AdversaryAgent(sequence_length=rounds, max_transition_prob=0.45, seed=seed)
-    report = adversary.get_validation_report()
-
-    print(f"Sequence Length: {report['length']}")
-    print(f"Move Balance: {report['counts']} (max deviation from N/3: {report['max_deviation']:.1f})")
-    print(f"Triple Repeats Count: {report['triple_repeats_count']} (Required: 0)")
-    print(f"Empirical Max Order-1 Transition: {report['max_transition_prob']:.3f} (Cap: <= 0.45)")
-    print(f"Mean Transition Entropy H(T): {report['mean_transition_entropy']:.3f} / {report['theoretical_max_entropy']:.3f} bits ({report['entropy_ratio']*100:.1f}%)")
-    print(f"CSP Constraint Satisfaction Status: {'VALID / PASSED' if report['is_valid'] else 'VIOLATED'}")
-
-    # Play match
-    predictor = BayesianAgent(seed=seed)
-    match = play_match(predictor, adversary, rounds=rounds, seed=seed)
-
-    print("\nPerformance vs CSP Adversary:")
-    print(f"  Predictor Win Rate: {match['pred_win_rate']*100:.2f}%")
-    print(f"  Adversary Win Rate: {match['opp_win_rate']*100:.2f}%")
-    print(f"  Tie Rate:           {match['tie_rate']*100:.2f}%")
-    print(f"  Prediction Accuracy:{match['prediction_accuracy']*100:.2f}% (Nash Baseline: 33.3%)")
-
-    deviation = abs(match['pred_win_rate'] - 0.3333) * 100.0
-    print(f"\nScientific Interpretation:")
-    print(f"  The predictor achieves {match['pred_win_rate']*100:.1f}% win-rate (within {deviation:.1f}% of theoretical Nash equilibrium).")
-    print("  Because the CSP adversary strictly enforces low transition predictability (P <= 0.45, Entropy > 1.55 bits)")
-    print("  and zero triple-repeats, the Bayesian inference engine correctly determines that the opponent")
-    print("  is near-unpredictable, stabilizing its posterior distribution near uniform (1/3, 1/3, 1/3) and preventing exploitation.")
-
-
 def generate_evaluation_plots(output_dir: str = "results", seed: int = 42):
     """
-    Generates publication-quality dark-themed diagnostic plots:
-    1. probability_tracking.png: Posterior trajectories against pattern vs CSP adversary.
-    2. cumulative_winrate.png: Convergence curves across opponents.
-    3. transition_heatmap.png: Empirical transition matrix heatmaps.
+    Generates required deliverable figures:
+    1. Probability plot: predicted P(R), P(P), P(S) over rounds vs Biased and Random.
+    2. Cumulative win-rate progression over 1000 rounds across all opponents.
+    3. Heatmap of the learned transition matrix.
     """
     os.makedirs(output_dir, exist_ok=True)
-    plt.style.use("dark_background")
 
     # -------------------------------------------------------------------------
-    # Plot 1: Probability Trajectory Plot
+    # Plot 1: Probability Tracking Over Rounds (Explainability)
     # -------------------------------------------------------------------------
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), dpi=300)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 7.5), dpi=300)
     fig.patch.set_facecolor("#0a0a0a")
     for ax in (ax1, ax2):
         ax.set_facecolor("#121212")
 
-    # Subplot A: Against Biased / Pattern Opponent (Biased 70% Rock)
-    b_agent1 = BayesianAgent(seed=seed)
-    opp_biased = BiasedOpponent(probabilities={"rock": 0.70, "paper": 0.15, "scissors": 0.15}, seed=seed)
-    play_match(b_agent1, opp_biased, rounds=150, seed=seed)
-    logs_biased = b_agent1.get_logs()
+    # Subplot A: Against Biased Opponent
+    b_agent = BayesianAgent(prior_alpha=1.0, seed=seed)
+    biased_opp = BiasedOpponent(probabilities={"rock": 0.70, "paper": 0.15, "scissors": 0.15}, seed=seed)
+    play_match(b_agent, biased_opp, rounds=150, seed=seed)
+    logs_biased = b_agent.get_logs()
 
     rounds_b = [l["round"] for l in logs_biased]
     p_rock_b = [l["p_rock"] for l in logs_biased]
@@ -313,23 +265,23 @@ def generate_evaluation_plots(output_dir: str = "results", seed: int = 42):
     ax1.legend(loc="upper right", frameon=True, facecolor="#18181b", edgecolor="#3f3f46", fontsize=8)
     ax1.grid(color="#ffffff", alpha=0.15, linestyle="--")
 
-    # Subplot B: Against CSP Adversary (Remains near uniform)
+    # Subplot B: Against Random Opponent (Remains near uniform)
     b_agent2 = BayesianAgent(seed=seed)
-    csp_adv = AdversaryAgent(sequence_length=150, seed=seed)
-    play_match(b_agent2, csp_adv, rounds=150, seed=seed)
-    logs_csp = b_agent2.get_logs()
+    rand_opp = RandomAgent(seed=seed)
+    play_match(b_agent2, rand_opp, rounds=150, seed=seed)
+    logs_rand = b_agent2.get_logs()
 
-    rounds_c = [l["round"] for l in logs_csp]
-    p_rock_c = [l["p_rock"] for l in logs_csp]
-    p_paper_c = [l["p_paper"] for l in logs_csp]
-    p_scissors_c = [l["p_scissors"] for l in logs_csp]
+    rounds_c = [l["round"] for l in logs_rand]
+    p_rock_c = [l["p_rock"] for l in logs_rand]
+    p_paper_c = [l["p_paper"] for l in logs_rand]
+    p_scissors_c = [l["p_scissors"] for l in logs_rand]
 
     ax2.plot(rounds_c, p_rock_c, color="#ef4444", linewidth=1.8, alpha=0.85, label="P(Rock)")
     ax2.plot(rounds_c, p_paper_c, color="#3b82f6", linewidth=1.8, alpha=0.85, label="P(Paper)")
     ax2.plot(rounds_c, p_scissors_c, color="#10b981", linewidth=1.8, alpha=0.85, label="P(Scissors)")
     ax2.axhline(1.0 / 3.0, color="#ffffff", linestyle="--", linewidth=1.5, label="Uniform Nash Equilibrium Line (33.3%)")
 
-    ax2.set_title("Posterior Probability Trajectory vs CSP Adversary (Unpredictable Stability)", fontsize=12, fontweight="bold", color="#ffffff", pad=10)
+    ax2.set_title("Posterior Probability Trajectory vs Random Opponent (Nash Baseline Stability)", fontsize=12, fontweight="bold", color="#ffffff", pad=10)
     ax2.set_xlabel("Round Number", fontsize=10, color="#ffffff")
     ax2.set_ylabel("Posterior Probability P(m)", fontsize=10, color="#ffffff")
     ax2.set_ylim(0.15, 0.55)
@@ -354,7 +306,7 @@ def generate_evaluation_plots(output_dir: str = "results", seed: int = 42):
         "Cyclic (R->P->S)": (CyclicOpponent(), "#38bdf8", "-"),
         "Win-Stay/Lose-Shift": (WinStayLoseShiftOpponent(seed=seed), "#f59e0b", "-."),
         "Rule-Based Agent": (RuleBasedAgent(seed=seed), "#a855f7", ":"),
-        "CSP Adversary": (AdversaryAgent(sequence_length=1000, seed=seed), "#ffffff", "-"),
+        "Copier": (CopierOpponent(seed=seed), "#ffffff", "-"),
         "Random (Nash)": (RandomAgent(seed=seed), "#71717a", "--"),
     }
 
@@ -393,14 +345,14 @@ def generate_evaluation_plots(output_dir: str = "results", seed: int = 42):
         for j, m2 in enumerate(ALL_MOVES):
             cyclic_mat[i, j] = dist[m2]
 
-    # Learned transition matrix vs CSP Adversary
-    b_csp = BayesianAgent(seed=seed)
-    play_match(b_csp, AdversaryAgent(sequence_length=1000, seed=seed), rounds=1000, seed=seed)
-    csp_mat = np.zeros((3, 3))
+    # Learned transition matrix vs Random Opponent
+    b_rand = BayesianAgent(seed=seed)
+    play_match(b_rand, RandomAgent(seed=seed), rounds=1000, seed=seed)
+    rand_mat = np.zeros((3, 3))
     for i, m1 in enumerate(ALL_MOVES):
-        dist = b_csp.order1_models[m1].get_predictive_distribution()
+        dist = b_rand.order1_models[m1].get_predictive_distribution()
         for j, m2 in enumerate(ALL_MOVES):
-            csp_mat[i, j] = dist[m2]
+            rand_mat[i, j] = dist[m2]
 
     im1 = ax1.imshow(cyclic_mat, cmap="magma", vmin=0, vmax=1)
     ax1.set_title("Learned Transitions: Cyclic Opponent\n(Sharp Deterministic Pattern)", color="#ffffff", fontweight="bold", fontsize=10)
@@ -416,8 +368,8 @@ def generate_evaluation_plots(output_dir: str = "results", seed: int = 42):
             val = cyclic_mat[i, j]
             ax1.text(j, i, f"{val:.2f}", ha="center", va="center", color="black" if val > 0.6 else "white", fontweight="bold")
 
-    im2 = ax2.imshow(csp_mat, cmap="magma", vmin=0, vmax=1)
-    ax2.set_title("Learned Transitions: CSP Adversary\n(High Entropy Uniformity <= 0.45)", color="#ffffff", fontweight="bold", fontsize=10)
+    im2 = ax2.imshow(rand_mat, cmap="magma", vmin=0, vmax=1)
+    ax2.set_title("Learned Transitions: Random Opponent\n(Uncorrelated Uniform Stability ~0.33)", color="#ffffff", fontweight="bold", fontsize=10)
     ax2.set_xticks(range(3))
     ax2.set_yticks(range(3))
     ax2.set_xticklabels(["Rock", "Paper", "Scissors"], color="#ffffff")
@@ -426,7 +378,7 @@ def generate_evaluation_plots(output_dir: str = "results", seed: int = 42):
 
     for i in range(3):
         for j in range(3):
-            val = csp_mat[i, j]
+            val = rand_mat[i, j]
             ax2.text(j, i, f"{val:.2f}", ha="center", va="center", color="black" if val > 0.6 else "white", fontweight="bold")
 
     plt.tight_layout()
@@ -477,13 +429,10 @@ def main():
     # 1. Run multi-seed benchmark matrix
     run_benchmark_matrix(rounds=args.rounds, seeds=args.seeds, base_seed=args.seed, output_dir=args.output_dir)
 
-    # 2. CSP Stress test
-    run_csp_stress_test(rounds=args.rounds, seed=args.seed, output_dir=args.output_dir)
-
-    # 3. Strategy Detector Online Telemetry
+    # 2. Strategy Detector Online Telemetry
     print_strategy_detection_telemetry(rounds=60, seed=args.seed)
 
-    # 4. Generate all diagnostic plots
+    # 3. Generate all diagnostic plots
     generate_evaluation_plots(output_dir=args.output_dir, seed=args.seed)
 
     print("\n" + "=" * 80)

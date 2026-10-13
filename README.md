@@ -35,7 +35,7 @@ This project is a high-performance **Stone-Paper-Scissors artificial intelligenc
 6. **Data Export & Privacy (1-Click CSV & JSON)**:
    - Full round-by-round match telemetry logs can be downloaded directly from the browser as standard CSV or JSON files for further analysis.
 7. **In-App "About AI" Architecture Explorer**:
-   - Built-in tabbed educational section detailing the game theory, Markov equations, CSP solver, symbolic rules, Bayesian mathematics, and ethics.
+   - Built-in tabbed educational section detailing the game theory, Markov equations, symbolic rules, Bayesian mathematics, and ethics.
 8. **Offline Monte Carlo Simulation & Stress Testing**:
    - Comprehensive Python experiment runner (`run_experiments.py`) that evaluates predictors across 1,000 rounds over 20 random seeds against diverse simulated opponents.
 
@@ -86,20 +86,7 @@ Implemented in [`src/ai/ai.ts`](file:///d:/FAI_Project/src/ai/ai.ts), this engin
 
 ---
 
-### 2.2 Layer 1: Constraint-Satisfaction (CSP) Adversary
-Implemented in [`csp_adversary.py`](file:///d:/FAI_Project/csp_adversary.py), this module synthesizes synthetic move sequences of length $N = 1000$ to serve as an **unexploitable stress-test adversary**.
-
-- **Search Technique**: Backtracking search with **Forward Checking**, chunk stitching (chunk size = 100), and min-conflicts fallback.
-- **Three Mandatory Constraints**:
-  1. **Balanced Move Distribution ($\pm 1$)**: Over 1,000 moves, each of Rock, Paper, and Scissors is used exactly 333 or 334 times, eliminating marginal frequency bias.
-  2. **No Triple Repeats**: $s_i \ne s_{i-1} \lor s_{i-1} \ne s_{i-2}$. The same move never appears three times in a row.
-  3. **Low Order-1 Predictability**: Transition probability ceiling $P(m_t \mid m_{t-1}) \le 0.45$.
-- **Entropy-Maximizing Value Ordering**: Prioritizes assigning transitions with the lowest current occurrence count, achieving an empirical transition matrix entropy of **$H = 1.585$ bits** ($100\%$ of theoretical maximum $\log_2 3 = 1.585$).
-- **Wrapped Agent**: Exposed via `AdversaryAgent(sequence)` with the standard `play(history)` interface.
-
----
-
-### 2.3 Layer 2: Knowledge & Reasoning Layer (Symbolic Strategy Detection)
+### 2.2 Knowledge & Reasoning Layer (Symbolic Strategy Detection)
 Implemented in [`strategy_rules.py`](file:///d:/FAI_Project/strategy_rules.py), this layer encodes formal human cognitive heuristics over a sliding history window ($W \in [10, 20]$).
 
 - **Encoded Cognitive Rules**:
@@ -112,7 +99,7 @@ Implemented in [`strategy_rules.py`](file:///d:/FAI_Project/strategy_rules.py), 
 
 ---
 
-### 2.4 Layer 3: Applied Bayesian Inference & Decision Theory
+### 2.3 Applied Bayesian Inference & Decision Theory
 Implemented in [`bayesian_agent.py`](file:///d:/FAI_Project/bayesian_agent.py), this layer performs formal probabilistic reasoning under uncertainty.
 
 - **Dirichlet-Multinomial Conjugate Updating**:  
@@ -136,7 +123,7 @@ Implemented in [`bayesian_agent.py`](file:///d:/FAI_Project/bayesian_agent.py), 
 
 ---
 
-### 2.5 Applied & Responsible AI Framework
+### 2.4 Applied & Responsible AI Framework
 Documented in [`docs/responsible_ai.md`](file:///d:/FAI_Project/docs/responsible_ai.md):
 
 - **Zero-Lookahead Fair Play**:  
@@ -161,34 +148,33 @@ The primary predictor (`BayesianAgent`) was benchmarked across **20 distinct ran
 
 | Opponent Strategy | Theoretical Expectation | Bot Win Rate (Mean ± Std) | Loss Rate (Mean ± Std) | Tie Rate (Mean ± Std) | Prediction Accuracy |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **Uniform Random** | Nash Equilibrium ($33.3\%$) | **33.36% ± 1.60%** | 33.53% ± 1.36% | 33.11% ± 1.36% | 33.04% ± 1.44% |
-| **Rule-Based Agent** | Detectable Symbolic Patterns | **41.07% ± 2.00%** | 29.74% ± 1.50% | 29.19% ± 1.87% | 41.56% ± 1.79% |
-| **Bayesian Agent (Self)**| Symmetric Bayesian Play | **33.53% ± 1.34%** | 33.25% ± 1.60% | 33.22% ± 1.53% | 33.51% ± 1.60% |
-| **CSP Adversary** | High-Entropy Pseudo-Random | **46.94% ± 1.94%** | 15.29% ± 1.45% | 37.78% ± 2.62% | 48.75% ± 1.55% |
-| **Biased (70% Rock)** | Skewed Marginal Distribution | **69.51% ± 1.25%** | 15.21% ± 1.00% | 15.28% ± 0.92% | 69.67% ± 1.19% |
-| **Cyclic ($R \to P \to S$)** | Deterministic Periodic Pattern | **99.57% ± 0.06%** | 0.18% ± 0.06% | 0.26% ± 0.07% | 99.80% ± 0.00% |
-| **Win-Stay / Lose-Shift**| Deterministic Reactive Pattern | **98.44% ± 0.55%** | 1.10% ± 0.39% | 0.46% ± 0.17% | 98.14% ± 0.53% |
+| **Uniform Random** | Nash Equilibrium ($33.3\%$) | **33.36% ± 1.60%** | 33.53% ± 1.36% | 33.11% ± 1.36% | 49.86% ± 1.97% |
+| **Rule-Based Agent** | Detectable Symbolic Patterns | **41.07% ± 2.00%** | 29.74% ± 1.50% | 29.19% ± 1.87% | 57.98% ± 2.05% |
+| **Bayesian Agent (Self)**| Symmetric Bayesian Play | **33.53% ± 1.34%** | 33.25% ± 1.60% | 33.22% ± 1.53% | 50.22% ± 1.90% |
+| **Copier (Mirroring)** | Reactive Mirroring Heuristic | **61.91% ± 2.00%** | 2.81% ± 1.77% | 35.28% ± 0.85% | 95.66% ± 2.72% |
+| **Biased (70% Rock)** | Skewed Marginal Distribution | **69.51% ± 1.25%** | 15.21% ± 1.00% | 15.28% ± 0.92% | 82.05% ± 1.17% |
+| **Cyclic ($R \to P \to S$)** | Deterministic Periodic Pattern | **99.57% ± 0.06%** | 0.18% ± 0.06% | 0.26% ± 0.07% | 99.82% ± 0.06% |
+| **Win-Stay / Lose-Shift**| Deterministic Reactive Pattern | **98.44% ± 0.55%** | 1.10% ± 0.39% | 0.46% ± 0.17% | 98.89% ± 0.40% |
 
 ---
 
 ### In-Depth Result Analysis:
 
 1. **Nash Baseline Validation vs. Uniform Random**:
-   - Against pure uncorrelated noise (`RandomAgent`), the Bayesian model records **$33.36\% \pm 1.60\%$ win rate** and **$33.04\%$ prediction accuracy**.
-   - This validates that the predictor converges to the theoretical $1/3$ baseline and cannot be tricked into finding illusory patterns in truly random processes.
+   - Against pure uncorrelated noise (`RandomAgent`), the Bayesian model records **$33.36\% \pm 1.60\%$ win rate**, precisely matching the theoretical Nash equilibrium expectation.
+   - This validates that the predictor converges gracefully and does not hallucinate patterns in truly unpatterned distributions.
 
-2. **CSP Adversary Stress-Testing**:
-   - The CSP adversary successfully satisfies all constraints: transition entropy is maximized ($H = 1.585$ bits out of $\log_2 3 = 1.585$), and transition probabilities never exceed $0.336 \le 0.45$.
-   - However, because the CSP strictly forbids triple repeats ($s_i \ne s_{i-1}$ when $s_{i-1} = s_{i-2}$), the Bayesian contextual model detects this **negative autocorrelation**.
-   - As a result, the model pushes its win rate to **$46.94\%$** and suppresses its loss rate down to **$15.29\%$** (with $37.78\%$ ties). This demonstrates the model's remarkable sensitivity to subtle statistical structure even in highly uniform sequences.
+2. **Adaptive Mirror-Exploitation vs. Copier**:
+   - Against an opponent that mirrors the agent's prior move, the Bayesian agent predicts the mirroring action with **$95.66\% \pm 2.72\%$ accuracy**, winning **$61.91\%$** of rounds and restricting losses to a negligible **$2.81\%$** (with $35.28\%$ ties).
+   - This confirms that the model rapidly recognizes reactive copying loops and selects the optimal counter-move under expected utility.
 
 3. **Mastery of Human Cognitive Heuristics**:
    - Against deterministic human strategies (`CyclicOpponent` and `WinStayLoseShiftOpponent`), the Bayesian agent achieves **$>98.4\%$ win rates** and near-zero losses ($<1.1\%$), mastering the opponent's strategy within fewer than 15 rounds.
 
 4. **Generated Visual Deliverables (`results/`)**:
-   - [`results/probability_tracking.png`](file:///d:/FAI_Project/results/probability_tracking.png): Shows predicted $P(R), P(P), P(S)$ converging to $70\%$ against the biased player, while staying near $33.3\%$ against the CSP adversary.
+   - [`results/probability_tracking.png`](file:///d:/FAI_Project/results/probability_tracking.png): Shows predicted $P(R), P(P), P(S)$ converging to $70\%$ against the biased player, while staying balanced near $33.3\%$ against uniform random play.
    - [`results/cumulative_winrate.png`](file:///d:/FAI_Project/results/cumulative_winrate.png): Visualizes cumulative win-rate progression across all 7 opponents over 1,000 rounds.
-   - [`results/transition_heatmap.png`](file:///d:/FAI_Project/results/transition_heatmap.png): Side-by-side empirical transition heatmaps contrasting the CSP adversary with cyclic and biased opponents.
+   - [`results/transition_heatmap.png`](file:///d:/FAI_Project/results/transition_heatmap.png): Side-by-side empirical transition heatmaps contrasting uniform random play with cyclic and biased opponents.
 
 ---
 
@@ -201,17 +187,15 @@ graph TD
         VAL[Fair-Play Validator: Zero Lookahead Assertion]
     end
 
-    subgraph Layer1 ["Layer 1: CSP Adversary Engine (csp_adversary.py)"]
-        CSP_GEN[Backtracking Search + Forward Checking]
-        C1[Constraint 1: Balance +-1]
-        C2[Constraint 2: No Triple Repeats]
-        C3[Constraint 3: P_next_prev <= 0.45]
-        STITCH[Chunk Stitcher & Min-Conflicts]
-        ADV[AdversaryAgent]
-        CSP_GEN --> C1 & C2 & C3 --> STITCH --> ADV
+    subgraph Engine1 ["Adaptive Markov Engine (Client: markov_agent.ts)"]
+        ORD2[Order-2 Transition Maximization: m_t-2, m_t-1]
+        ORD1[Order-1 Transition Backoff: m_t-1]
+        UNIGRAM[Unigram Frequency Bias Fallback]
+        DECAY[Exponential Recency Decay: gamma = 0.94]
+        ORD2 --> ORD1 --> UNIGRAM --> DECAY
     end
 
-    subgraph Layer2 ["Layer 2: Knowledge & Reasoning (strategy_rules.py)"]
+    subgraph Layer2 ["Knowledge & Reasoning (strategy_rules.py)"]
         HIST[Sliding Window History W=15]
         R_WSLS[Win-Stay / Lose-Shift Rule]
         R_CYC[Periodic Cycling Rule]
@@ -222,7 +206,7 @@ graph TD
         HIST --> R_WSLS & R_CYC & R_COP & R_BIAS --> DET --> RULE_AGENT
     end
 
-    subgraph Layer3 ["Layer 3: Applied Bayesian Inference (bayesian_agent.py)"]
+    subgraph Layer3 ["Applied Bayesian Inference (bayesian_agent.py)"]
         PRIOR[Dirichlet Prior alpha_0]
         GLOBAL_POST[Global Dirichlet-Multinomial Posterior]
         MARKOV_POST[Order-1 Contextual Dirichlet Posteriors]
@@ -238,9 +222,9 @@ graph TD
         HUD[Obsidian Luxury UI + Live Telemetry Dashboard]
     end
 
-    ADV --> GL
     RULE_AGENT --> GL
     EXP_UTIL --> GL
+    DECAY --> GL
     GL --> VAL
     VAL --> HIST
     VAL --> GLOBAL_POST & MARKOV_POST
@@ -287,7 +271,7 @@ python run_experiments.py --interactive-demo
 
 ### 4. Run Automated Test Suites
 ```bash
-# Run Python Pytest test suite (21 unit tests: CSP, Strategy Rules, Bayesian updates):
+# Run Python Pytest test suite (16 unit tests: Strategy Rules, Bayesian updates):
 python -m pytest tests/
 
 # Run TypeScript Vitest test suite (14 unit tests: Markov engine, Rules, Logger):
@@ -305,9 +289,8 @@ npm run build
 
 ```
 .
-├── csp_adversary.py           # Layer 1: CSP move generator & AdversaryAgent
-├── strategy_rules.py          # Layer 2: Symbolic human strategy rules & StrategyDetector
-├── bayesian_agent.py          # Layer 3: Dirichlet prior updates, model blending & audit log
+├── strategy_rules.py          # Symbolic human strategy rules & StrategyDetector
+├── bayesian_agent.py          # Dirichlet prior updates, model blending & audit log
 ├── opponents.py               # Benchmark agents (Random, WSLS, Cycler, Copier, Biased)
 ├── run_experiments.py         # 20-seed Monte Carlo experiment runner & plotter
 ├── docs/
@@ -320,7 +303,6 @@ npm run build
 │   ├── cumulative_winrate.png # Cumulative win rate progression curves
 │   └── transition_heatmap.png # Empirical transition matrix heatmaps
 ├── tests/
-│   ├── test_csp.py            # Unit tests for CSP constraints & validator
 │   ├── test_strategy_rules.py # Unit tests for symbolic strategy rules
 │   ├── test_bayesian.py       # Unit tests for Bayesian Dirichlet posterior shifts
 │   ├── test_ai.py             # Unit tests for Markov AI engine

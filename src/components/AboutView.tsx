@@ -20,7 +20,7 @@ interface AboutViewProps {
   backButtonLabel?: string;
 }
 
-type TabKey = 'overview' | 'markov' | 'csp' | 'rules' | 'bayesian' | 'responsible' | 'benchmarks';
+type TabKey = 'overview' | 'markov' | 'rules' | 'bayesian' | 'responsible' | 'benchmarks';
 
 export const AboutView: React.FC<AboutViewProps> = ({
   onBack,
@@ -31,9 +31,8 @@ export const AboutView: React.FC<AboutViewProps> = ({
   const tabs: { key: TabKey; label: string; icon: React.ReactNode; badge?: string }[] = [
     { key: 'overview', label: 'System Architecture', icon: <Layers className="w-4 h-4" /> },
     { key: 'markov', label: 'Adaptive Markov AI', icon: <Brain className="w-4 h-4" /> },
-    { key: 'csp', label: 'CSP Adversary (Layer 1)', icon: <Cpu className="w-4 h-4" />, badge: 'Adversary' },
-    { key: 'rules', label: 'Strategy Rules (Layer 2)', icon: <Activity className="w-4 h-4" /> },
-    { key: 'bayesian', label: 'Bayesian Inference (Layer 3)', icon: <Target className="w-4 h-4" /> },
+    { key: 'rules', label: 'Strategy Rules', icon: <Activity className="w-4 h-4" /> },
+    { key: 'bayesian', label: 'Bayesian Inference', icon: <Target className="w-4 h-4" /> },
     { key: 'responsible', label: 'Responsible AI & Ethics', icon: <ShieldCheck className="w-4 h-4" /> },
     { key: 'benchmarks', label: 'Empirical Benchmarks', icon: <BarChart3 className="w-4 h-4" />, badge: '20 Seeds' },
   ];
@@ -136,20 +135,20 @@ export const AboutView: React.FC<AboutViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-mono font-bold text-neutral-400 uppercase">Layer 1</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white">CSP</span>
+                    <span className="text-xs font-mono font-bold text-neutral-400 uppercase">Engine 1</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white">Markov</span>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">Constraint Adversary</h3>
+                  <h3 className="text-base font-bold text-white mb-2">Adaptive Markov Engine</h3>
                   <p className="text-xs text-neutral-400 leading-relaxed mb-3">
-                    Synthesizes 1000-move sequences via backtracking with forward checking. Enforces balance (±1),
-                    no triple repeats, and bounded transition probability (P ≤ 0.45, H = 1.585 bits).
+                    Hierarchical transition model combining localized Order-2 conditioning, Order-1 backoff, and
+                    exponential recency weighting (decay &gamma; = 0.94) for real-time human adaptation.
                   </p>
-                  <span className="text-[11px] font-mono text-neutral-300 block">File: csp_adversary.py</span>
+                  <span className="text-[11px] font-mono text-neutral-300 block">File: markov_agent.ts</span>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-mono font-bold text-neutral-400 uppercase">Layer 2</span>
+                    <span className="text-xs font-mono font-bold text-neutral-400 uppercase">Engine 2</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white">Symbolic</span>
                   </div>
                   <h3 className="text-base font-bold text-white mb-2">Knowledge & Reasoning</h3>
@@ -162,7 +161,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
                 <div className="p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-mono font-bold text-neutral-400 uppercase">Layer 3</span>
+                    <span className="text-xs font-mono font-bold text-neutral-400 uppercase">Engine 3</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white">Bayesian</span>
                   </div>
                   <h3 className="text-base font-bold text-white mb-2">Applied & Responsible AI</h3>
@@ -177,13 +176,13 @@ export const AboutView: React.FC<AboutViewProps> = ({
               {/* ASCII Diagram Box */}
               <div className="p-4 rounded-2xl bg-black/80 border border-white/10 font-mono text-[11px] text-neutral-300 overflow-x-auto leading-relaxed">
                 <div className="text-neutral-500 mb-1">// End-to-End System Execution Flow</div>
-                <div>[Player Move (Rock/Paper/Scissors)]  &lt;---&gt;  [Simultaneous Move Engine]  &lt;---&gt;  [CSP Adversary / Test Opponents]</div>
+                <div>[Player Move (Rock/Paper/Scissors)]  &lt;---&gt;  [Simultaneous Move Arena]  &lt;---&gt;  [Adaptive Opponent Engine]</div>
                 <div>              |                                     |</div>
                 <div>              v                                     v</div>
                 <div>   [Sliding Window W=15]                 [Immutable History H_&lt;t]  &lt;-- Zero Lookahead Assertion</div>
                 <div>              |                                     |</div>
                 <div>              v                                     v</div>
-                <div>[Layer 2: Symbolic Strategy Rules]       [Layer 3: Bayesian Dirichlet Markov Modeller]</div>
+                <div>[Symbolic Strategy Rules Engine]          [Bayesian Dirichlet Markov Modeller]</div>
                 <div>   - Win-Stay / Lose-Shift (WSLS)           - Conjugate Prior α_t = α_0 + counts</div>
                 <div>   - Periodic Cycling Detection             - Contextual Dirichlet Transitions</div>
                 <div>   - Reactive Copying / Bias                - Expected Utility argmax E[U(a, s)]</div>
@@ -319,97 +318,6 @@ export const AboutView: React.FC<AboutViewProps> = ({
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* 3. LAYER 1: CSP ADVERSARY */}
-        {/* ========================================================================= */}
-        {activeTab === 'csp' && (
-          <div className="space-y-6">
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl bg-neutral-950/80 border border-white/10 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 text-white flex items-center justify-center border border-white/20">
-                  <Cpu className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">
-                    Layer 1: Constraint Satisfaction (CSP) Adversary
-                  </h2>
-                  <p className="text-xs text-neutral-400">
-                    Backtracking search move generator enforcing hard mathematical constraints (csp_adversary.py)
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-sm text-neutral-300 leading-relaxed mb-6">
-                To rigorously stress-test the opponent predictor, we built a constraint-based adversary that produces
-                sequences of length N = 1000 via backtracking search with forward checking, chunk stitching,
-                and entropy maximization.
-              </p>
-
-              {/* 3 Mandatory Constraints */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
-                  <div className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>1. Balanced Usage (±1)</span>
-                  </div>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Over N=1000, each of Rock, Paper, and Scissors is assigned exactly 333 or 334 times (differing by at most ±1),
-                    preventing any stationary frequency bias from being exploited.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
-                  <div className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>2. Zero Triple Repeats</span>
-                  </div>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Hard constraint: s_i ≠ s_(i-1) or s_(i-1) ≠ s_(i-2). The same move never appears three times consecutively,
-                    ruling out obvious static play.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
-                  <div className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>3. Low Predictability</span>
-                  </div>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Transition probability ceiling: P(m_t | m_(t-1)) ≤ 0.45. Achieves empirical transition matrix entropy of
-                    <strong> 1.585 bits</strong> (100% of theoretical maximum log2(3) = 1.585).
-                  </p>
-                </div>
-              </div>
-
-              {/* Technical Execution details */}
-              <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-neutral-400" />
-                  Algorithm & Scaling Strategy
-                </h3>
-                <ul className="space-y-2 text-xs text-neutral-300">
-                  <li className="flex items-start gap-2">
-                    <span className="text-white font-mono font-bold">•</span>
-                    <span><strong>Forward Checking</strong>: Prunes candidates immediately if remaining counts cannot satisfy balance or if triple repeats are detected.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-white font-mono font-bold">•</span>
-                    <span><strong>Entropy-Maximizing Value Ordering</strong>: Prioritizes assigning the transition (m_(t-1), m) with the lowest current occurrence count to distribute transitions uniformly.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-white font-mono font-bold">•</span>
-                    <span><strong>Chunk Stitching (Chunk Size = 100)</strong>: Solves in partitioned blocks with boundary verification, scaling effortlessly to N = 1000 in milliseconds with Min-Conflicts fallback.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-white font-mono font-bold">•</span>
-                    <span><strong>AdversaryAgent</strong>: Wraps the validated sequence into an interactive agent with the standard <code className="font-mono bg-neutral-900 px-1 py-0.5 rounded text-white">play(history)</code> interface.</span>
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
@@ -722,12 +630,12 @@ export const AboutView: React.FC<AboutViewProps> = ({
                     <tr className="hover:bg-white/5 transition-colors bg-white/[0.02]">
                       <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-400" />
-                        CSP Adversary
+                        Copier (Mirroring)
                       </td>
-                      <td className="py-3 px-4 text-white font-bold">46.94% ± 1.94%</td>
-                      <td className="py-3 px-4 text-neutral-400">15.29% ± 1.45%</td>
-                      <td className="py-3 px-4 text-neutral-400">37.78% ± 2.62%</td>
-                      <td className="py-3 px-4 text-neutral-300 font-bold">48.75% ± 1.55%</td>
+                      <td className="py-3 px-4 text-white font-bold">61.91% ± 2.00%</td>
+                      <td className="py-3 px-4 text-neutral-400">2.81% ± 1.77%</td>
+                      <td className="py-3 px-4 text-neutral-400">35.28% ± 0.85%</td>
+                      <td className="py-3 px-4 text-neutral-300 font-bold">95.66% ± 2.72%</td>
                     </tr>
                     <tr className="hover:bg-white/5 transition-colors">
                       <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
@@ -765,13 +673,13 @@ export const AboutView: React.FC<AboutViewProps> = ({
 
               {/* Stress Test Interpretation */}
               <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3">
-                <h3 className="text-sm font-bold text-white">CSP Stress Test Findings</h3>
+                <h3 className="text-sm font-bold text-white">Opponent Modeling & Convergence Findings</h3>
                 <p className="text-xs text-neutral-300 leading-relaxed">
-                  Against pure <code className="font-mono text-white">RandomAgent</code>, the predictor stays at 33.36%, proving convergence
-                  to the Nash baseline when no pattern exists. Against the <code className="font-mono text-white">CSP Adversary</code>,
-                  which features uniform transition probabilities (≤ 0.45) and 1.585 bits of entropy, the model achieves a
-                  46.94% win rate and holds losses down to 15.29%. This occurs because the CSP rule strictly forbidding triple repeats
-                  creates a subtle negative autocorrelation that the contextual Markov Dirichlet model successfully exploits.
+                  Against pure <code className="font-mono text-white">RandomAgent</code>, the predictor stays at 33.36%, proving mathematical convergence
+                  to the Nash equilibrium baseline when no exploitable pattern exists. Against behavioral and heuristic adversaries,
+                  the model demonstrates decisive adaptation: achieving a <code className="font-mono text-white">61.91%</code> win rate against the Copier
+                  with only 2.81% losses, <code className="font-mono text-white">69.51%</code> against fixed distribution bias (70% Rock),
+                  <code className="font-mono text-white">98.44%</code> against Win-Stay/Lose-Shift, and <code className="font-mono text-white">99.57%</code> against Cyclic rotations.
                 </p>
               </div>
             </div>

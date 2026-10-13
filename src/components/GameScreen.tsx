@@ -213,11 +213,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   About the AI Architecture & Algorithms
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-white border border-white/20">
-                    CSP • Rules • Bayesian
+                    Markov • Rules • Bayesian
                   </span>
                 </h3>
                 <p className="text-xs text-neutral-400 mt-0.5">
-                  Explore how Constraint Satisfaction, symbolic strategy detection, Dirichlet Markov models, and Fair Play work.
+                  Explore how Adaptive Markov decision trees, symbolic strategy detection, Dirichlet Bayesian models, and Fair Play work.
                 </p>
               </div>
             </div>
