@@ -65,6 +65,25 @@ Implemented in [`src/ai/ai.ts`](file:///d:/FAI_Project/src/ai/ai.ts), this engin
 - **Dynamic Rolling Accuracy Model Selection**:  
   The engine tracks the rolling prediction accuracy of both Order-1 and Order-2 models over a sliding window ($W = 20$). If the Order-2 model demonstrates equal or superior rolling accuracy, it is automatically deployed to execute the counter-move.
 
+- **Markov Agent Decision Hierarchy & Backoff Strategy**:  
+  When resolving the predicted opponent move at round $t$, the agent evaluates historical evidence through a structured multi-tiered backoff hierarchy:
+  - **Order-2 Transition Maximization**: Prioritizes localized patterns conditioned on the 2-step history $(m_{t-2}, m_{t-1})$. If the opponent previously played Paper followed by Scissors, the agent evaluates the empirical count $C((P, S) \to m)$ across $m \in \{R, P, S\}$ and selects the move with maximum frequency.
+  - **Order-1 Fallback**: If the specific 2-step tuple has never been recorded, the model backs off to the 1-step condition $C(m_{t-1} \to m)$.
+  - **Unigram Bias Fallback**: If the opponent's prior single move has never transitioned anywhere yet, the agent relies on the global aggregate frequency $C(m)$ (exploiting fixed human preferences, e.g., high Rock frequency).
+  - **Stochastic Cold Start**: At $t=0$ where no percepts exist, it defaults to uniform random play ($1/3$ probability per action) to avoid ungrounded initial bias.
+
+  ```
+  [Round t Prediction]
+           │
+           ├── (m_{t-2}, m_{t-1}) observed?
+           │        ├── YES ──► Argmax_m C((m_{t-2}, m_{t-1}) → m)
+           │        └── NO  ──► m_{t-1} transition observed?
+           │                         ├── YES ──► Argmax_m C(m_{t-1} → m)
+           │                         └── NO  ──► Global counts C(m) exist?
+           │                                          ├── YES ──► Argmax_m C(m)
+           │                                          └── NO  ──► Uniform Random (1/3 Cold Start)
+  ```
+
 ---
 
 ### 2.2 Layer 1: Constraint-Satisfaction (CSP) Adversary

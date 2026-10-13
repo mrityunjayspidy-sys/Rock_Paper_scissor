@@ -279,6 +279,47 @@ export const AboutView: React.FC<AboutViewProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Markov Agent Decision Hierarchy & Backoff Strategy */}
+              <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-4">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  Markov Agent Decision Hierarchy &amp; Backoff Strategy
+                </h3>
+                <p className="text-xs text-neutral-300 leading-relaxed">
+                  When resolving the predicted opponent move at round t, the agent evaluates historical evidence through a structured multi-tiered backoff hierarchy:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-neutral-900 border border-white/10">
+                    <span className="font-bold text-white block mb-1">1. Order-2 Transition Maximization</span>
+                    <p className="text-neutral-400 leading-relaxed text-[11px]">
+                      Prioritizes localized patterns conditioned on the 2-step history (m_t-2, m_t-1). If the opponent played Paper followed by Scissors, the agent evaluates C((P, S) → m) and selects the move with maximum frequency.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-neutral-900 border border-white/10">
+                    <span className="font-bold text-white block mb-1">2. Order-1 Fallback</span>
+                    <p className="text-neutral-400 leading-relaxed text-[11px]">
+                      If the specific 2-step tuple has never been recorded, the model backs off to the 1-step condition C(m_t-1 → m).
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-neutral-900 border border-white/10">
+                    <span className="font-bold text-white block mb-1">3. Unigram Bias Fallback</span>
+                    <p className="text-neutral-400 leading-relaxed text-[11px]">
+                      If the opponent&apos;s prior single move has never transitioned anywhere yet, the agent relies on the global aggregate frequency C(m) (exploiting fixed human preferences, e.g., high Rock frequency).
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-neutral-900 border border-white/10">
+                    <span className="font-bold text-white block mb-1">4. Stochastic Cold Start</span>
+                    <p className="text-neutral-400 leading-relaxed text-[11px]">
+                      At t=0 where no percepts exist, it defaults to uniform random play (1/3 probability per action) to avoid ungrounded initial bias.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
