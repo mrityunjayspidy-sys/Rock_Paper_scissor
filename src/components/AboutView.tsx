@@ -11,7 +11,6 @@ import {
   BarChart3,
   CheckCircle2,
   Lock,
-  Eye,
   Activity,
   Terminal,
 } from 'lucide-react';
@@ -21,7 +20,7 @@ interface AboutViewProps {
   backButtonLabel?: string;
 }
 
-type TabKey = 'overview' | 'markov' | 'csp' | 'rules' | 'bayesian' | 'vision' | 'responsible' | 'benchmarks';
+type TabKey = 'overview' | 'markov' | 'csp' | 'rules' | 'bayesian' | 'responsible' | 'benchmarks';
 
 export const AboutView: React.FC<AboutViewProps> = ({
   onBack,
@@ -35,7 +34,6 @@ export const AboutView: React.FC<AboutViewProps> = ({
     { key: 'csp', label: 'CSP Adversary (Layer 1)', icon: <Cpu className="w-4 h-4" />, badge: 'Adversary' },
     { key: 'rules', label: 'Strategy Rules (Layer 2)', icon: <Activity className="w-4 h-4" /> },
     { key: 'bayesian', label: 'Bayesian Inference (Layer 3)', icon: <Target className="w-4 h-4" /> },
-    { key: 'vision', label: 'MediaPipe Vision AI', icon: <Eye className="w-4 h-4" /> },
     { key: 'responsible', label: 'Responsible AI & Ethics', icon: <ShieldCheck className="w-4 h-4" /> },
     { key: 'benchmarks', label: 'Empirical Benchmarks', icon: <BarChart3 className="w-4 h-4" />, badge: '20 Seeds' },
   ];
@@ -127,7 +125,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
               </div>
 
               <p className="text-sm text-neutral-300 leading-relaxed mb-6">
-                In classical game theory, a two-player zero-sum game like Rock-Paper-Scissors has a unique
+                In classical game theory, a two-player zero-sum game like Stone-Paper-Scissors has a unique
                 Nash Equilibrium: playing moves uniformly at random (P = 1/3). However, actual human players
                 repeatedly violate stationarity and randomness due to cognitive biases (such as win-stay/lose-shift,
                 periodic cycling, or recency bias). This project constructs a complete, state-of-the-art
@@ -179,7 +177,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
               {/* ASCII Diagram Box */}
               <div className="p-4 rounded-2xl bg-black/80 border border-white/10 font-mono text-[11px] text-neutral-300 overflow-x-auto leading-relaxed">
                 <div className="text-neutral-500 mb-1">// End-to-End System Execution Flow</div>
-                <div>[User Input / Vision Gesture]  &lt;---&gt;  [Simultaneous Move Engine]  &lt;---&gt;  [CSP Adversary / Test Opponents]</div>
+                <div>[Player Move (Rock/Paper/Scissors)]  &lt;---&gt;  [Simultaneous Move Engine]  &lt;---&gt;  [CSP Adversary / Test Opponents]</div>
                 <div>              |                                     |</div>
                 <div>              v                                     v</div>
                 <div>   [Sliding Window W=15]                 [Immutable History H_&lt;t]  &lt;-- Zero Lookahead Assertion</div>
@@ -543,66 +541,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* 6. MEDIAPIPE VISION AI */}
-        {/* ========================================================================= */}
-        {activeTab === 'vision' && (
-          <div className="space-y-6">
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl bg-neutral-950/80 border border-white/10 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 text-white flex items-center justify-center border border-white/20">
-                  <Eye className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">
-                    MediaPipe Vision AI & Gesture Classification
-                  </h2>
-                  <p className="text-xs text-neutral-400">
-                    Real-time 21-point hand landmark tracking running 100% on-device (classifier.ts)
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-2">✊ Rock Gesture</h3>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    All 4 non-thumb fingers (Index, Middle, Ring, Pinky) are curled closed. Tip-to-wrist Euclidean distance
-                    is smaller than PIP joint distance.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-2">✋ Paper Gesture</h3>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    All 4 non-thumb fingers are extended straight outward. Finger tips are furthest from the wrist root landmark.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-2">✌️ Scissors Gesture</h3>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Index and Middle fingers are extended outward, while Ring and Pinky fingers remain tightly curled into the palm.
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3">
-                <h3 className="text-sm font-bold text-white">Instant Auto-Detect Mode</h3>
-                <p className="text-xs text-neutral-300 leading-relaxed">
-                  Features a 14-frame temporal debounce (~0.25 seconds of gesture stability). When a player holds a recognizable
-                  sign in front of their webcam, the vision engine locks in the gesture and immediately triggers the showdown arena
-                  without requiring mouse clicks or hotkeys.
-                </p>
-                <div className="p-3 rounded-xl bg-neutral-900 border border-white/10 text-[11px] font-mono text-emerald-400">
-                  ✓ Scale-Invariant Geometric Landmark Normalization • 60 FPS WebGL Pipeline
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* 7. RESPONSIBLE AI & FAIR PLAY */}
+        {/* 6. RESPONSIBLE AI & FAIR PLAY */}
         {/* ========================================================================= */}
         {activeTab === 'responsible' && (
           <div className="space-y-6">
@@ -640,13 +579,13 @@ export const AboutView: React.FC<AboutViewProps> = ({
                 <div className="p-5 rounded-2xl bg-black/60 border border-white/10">
                   <div className="flex items-center gap-2 text-white font-bold text-sm mb-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Explicit Consent Protocol</span>
+                    <span>Explicit Consent & Local Privacy</span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed mb-3">
                     User telemetry is stored purely on the client (<code className="font-mono text-white">localStorage</code>).
                   </p>
                   <p className="text-[11px] text-neutral-400">
-                    Zero video stream upload. Camera frames are processed entirely in browser memory and immediately discarded.
+                    Zero external telemetry or tracking. Match logs are stored strictly in client-side memory.
                   </p>
                 </div>
 
@@ -677,7 +616,7 @@ export const AboutView: React.FC<AboutViewProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* 8. EMPIRICAL BENCHMARKS & EXPERIMENTAL RESULTS */}
+        {/* 7. EMPIRICAL BENCHMARKS & EXPERIMENTAL RESULTS */}
         {/* ========================================================================= */}
         {activeTab === 'benchmarks' && (
           <div className="space-y-6">

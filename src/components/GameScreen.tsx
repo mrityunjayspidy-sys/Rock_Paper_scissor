@@ -1,12 +1,13 @@
-import React from 'react';
-import { Camera, Keyboard, Brain, Cpu, ShieldCheck, ArrowRight, Flame, Shield, Zap, Play, BookOpen } from 'lucide-react';
-import { Difficulty, SummaryStats, RoundLog } from '../ai';
+import React, { useEffect } from 'react';
+import { ArrowRight, Flame, Shield, Zap, BookOpen } from 'lucide-react';
+import { Move, Difficulty, SummaryStats, RoundLog } from '../ai';
 import { HomeStats } from './HomeStats';
+import { sounds } from '../sound';
 
-interface ModeSelectorProps {
+interface GameScreenProps {
   difficulty: Difficulty;
   onSelectDifficulty: (d: Difficulty) => void;
-  onSelectMode: (mode: 'camera' | 'nocamera') => void;
+  onPlayMove: (move: Move) => void;
   stats: SummaryStats;
   logs: readonly RoundLog[];
   onOpenStats: () => void;
@@ -16,10 +17,38 @@ interface ModeSelectorProps {
   onDownloadCSV: () => void;
 }
 
-export const ModeSelector: React.FC<ModeSelectorProps> = ({
+interface MoveCardDef {
+  move: Move;
+  title: string;
+  emoji: string;
+  hotkey: string;
+}
+
+const MOVE_CARDS: MoveCardDef[] = [
+  {
+    move: 'rock',
+    title: 'Rock (Stone)',
+    emoji: '✊',
+    hotkey: 'R',
+  },
+  {
+    move: 'paper',
+    title: 'Paper',
+    emoji: '✋',
+    hotkey: 'P',
+  },
+  {
+    move: 'scissors',
+    title: 'Scissors',
+    emoji: '✌️',
+    hotkey: 'S',
+  },
+];
+
+export const GameScreen: React.FC<GameScreenProps> = ({
   difficulty,
   onSelectDifficulty,
-  onSelectMode,
+  onPlayMove,
   stats,
   logs,
   onOpenStats,
@@ -28,17 +57,46 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   onDownloadJSON,
   onDownloadCSV,
 }) => {
+  // Global keyboard shortcuts (R, P, S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is in an input field
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'r') {
+        sounds.playTick(500);
+        onPlayMove('rock');
+      } else if (key === 'p') {
+        sounds.playTick(600);
+        onPlayMove('paper');
+      } else if (key === 's') {
+        sounds.playTick(700);
+        onPlayMove('scissors');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onPlayMove]);
+
+  const handleCardClick = (move: Move) => {
+    sounds.playTick(550);
+    onPlayMove(move);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[80vh] text-center">
+    <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[80vh] text-center">
+      {/* Title & Tagline */}
       <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight mb-3 font-heading">
-        Beat the <span className="underline decoration-white/30 underline-offset-8">Adaptive AI</span>
+        Stone Paper <span className="underline decoration-white/30 underline-offset-8">Scissors AI</span>
       </h1>
       <p className="text-base sm:text-lg text-neutral-400 max-w-2xl mb-8">
-        The bot learns from your past move sequences using Order-1 & Order-2 Markov tables with exponential decay to anticipate and counter your next move.
+        Can you outsmart the machine? The AI models your choices in real-time using Order-1 & Order-2 Markov tables with exponential memory decay.
       </p>
 
       {/* Difficulty Level Selection */}
-      <div className="w-full max-w-2xl mb-10">
+      <div className="w-full max-w-2xl mb-8">
         <span className="text-xs uppercase tracking-widest text-neutral-400 font-mono font-bold block mb-3">
           Select AI Difficulty Level
         </span>
@@ -97,86 +155,50 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               </span>
             </div>
             <p className={`text-xs ${difficulty === 'hard' ? 'text-neutral-800 font-medium' : 'text-neutral-400'}`}>
-              Instant learning from round 2, aggressive multi-order counterplay.
+              Instant learning, aggressive multi-order counterplay.
             </p>
           </button>
         </div>
       </div>
 
-      {/* Mode Selection Cards (Playing Block) */}
-      <div className="w-full max-w-3xl mb-4 text-center">
+      {/* Main Move Selection Cards */}
+      <div className="w-full max-w-3xl mb-3 text-center">
         <span className="text-xs uppercase tracking-widest text-neutral-400 font-mono font-bold block mb-1">
-          Start Playing • Select Input Mode
+          Choose Your Move
         </span>
         <p className="text-xs text-neutral-400 mb-6">
-          Choose between gesture camera detection or keyboard shortcuts to begin your match against the AI.
+          Click a card or press shortcut keys <span className="font-mono text-white font-bold">[ R, P, S ]</span> on your keyboard
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mb-12">
-        {/* Camera Mode */}
-        <button
-          onClick={() => onSelectMode('camera')}
-          className="group relative p-8 rounded-3xl bg-neutral-950/80 border border-white/10 hover:border-white/40 transition-all duration-300 text-left hover:shadow-2xl hover:shadow-white/5 hover:-translate-y-1 flex flex-col justify-between"
-        >
-          <div>
-            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-105 group-hover:bg-white group-hover:text-black transition-all">
-              <Camera className="w-7 h-7 text-white group-hover:text-black transition-colors" />
-            </div>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-2xl font-bold text-white font-heading">Camera Mode</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white text-black">
-                Vision AI
-              </span>
-            </div>
-            <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
-              Instant hand gesture detection via MediaPipe Vision. Features instant auto-trigger and 3-2-1 countdown.
-            </p>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-3xl mb-12">
+        {MOVE_CARDS.map((card) => (
+          <button
+            key={card.move}
+            id={`play-move-${card.move}`}
+            onClick={() => handleCardClick(card.move)}
+            className="group relative p-8 sm:p-10 rounded-3xl bg-neutral-950/80 border border-white/10 hover:border-white/50 transition-all duration-200 flex flex-col items-center justify-center text-center shadow-xl hover:shadow-2xl hover:shadow-white/10 hover:-translate-y-2 active:scale-95"
+          >
+            {/* Hotkey Pill */}
+            <span className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-neutral-900 border border-white/15 text-xs font-mono font-bold text-neutral-300 group-hover:text-white group-hover:border-white/40 transition-colors">
+              {card.hotkey}
+            </span>
 
-          <div className="space-y-2.5 border-t border-white/10 pt-4 text-xs text-neutral-300">
-            <div className="flex items-center gap-2">
-              <Cpu className="w-3.5 h-3.5 text-white" />
-              <span>Real-time 21-point hand landmark tracking</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-white" />
-              <span>100% Client-side, zero video upload</span>
-            </div>
-          </div>
-        </button>
+            {/* Emoji */}
+            <span className="text-7xl mb-4 transform group-hover:scale-115 transition-transform duration-200 select-none">
+              {card.emoji}
+            </span>
 
-        {/* No Camera Mode */}
-        <button
-          onClick={() => onSelectMode('nocamera')}
-          className="group relative p-8 rounded-3xl bg-neutral-950/80 border border-white/10 hover:border-white/40 transition-all duration-300 text-left hover:shadow-2xl hover:shadow-white/5 hover:-translate-y-1 flex flex-col justify-between"
-        >
-          <div>
-            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-105 group-hover:bg-white group-hover:text-black transition-all">
-              <Keyboard className="w-7 h-7 text-white group-hover:text-black transition-colors" />
-            </div>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-2xl font-bold text-white font-heading">No Camera</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-neutral-800 text-neutral-200 border border-white/15">
-                Keyboard & Tap
-              </span>
-            </div>
-            <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
-              Play using large tactile targets or keyboard shortcuts (R for Rock, P for Paper, S for Scissors).
-            </p>
-          </div>
+            {/* Title */}
+            <span className="text-2xl font-bold font-heading text-white mb-1">
+              {card.title}
+            </span>
 
-          <div className="space-y-2.5 border-t border-white/10 pt-4 text-xs text-neutral-300">
-            <div className="flex items-center gap-2">
-              <Brain className="w-3.5 h-3.5 text-white" />
-              <span>Full Order-1 & Order-2 Markov AI engine</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ArrowRight className="w-3.5 h-3.5 text-white" />
-              <span>Instant showdown & decision latency logs</span>
-            </div>
-          </div>
-        </button>
+            <span className="text-xs text-neutral-500 font-mono">
+              [ Press {card.hotkey} ]
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* AI Architecture & Algorithms Explorer Banner */}
@@ -211,7 +233,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         </div>
       )}
 
-      {/* Match Statistics & AI Telemetry Report (Below the Playing Block) */}
+      {/* Match Statistics & AI Telemetry Report */}
       <HomeStats
         stats={stats}
         logs={logs}

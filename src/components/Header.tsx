@@ -1,12 +1,10 @@
 import React from 'react';
-import { Sparkles, BarChart3, RotateCcw, Video, Keyboard, Flame, Zap, Shield, LogOut, BookOpen } from 'lucide-react';
+import { Sparkles, BarChart3, RotateCcw, Flame, Zap, Shield, LogOut, BookOpen } from 'lucide-react';
 import { SummaryStats, Difficulty } from '../ai';
 
 interface HeaderProps {
-  mode: 'camera' | 'nocamera';
   difficulty: Difficulty;
   stats: SummaryStats;
-  onSwitchMode: () => void;
   onSelectDifficulty: (d: Difficulty) => void;
   onOpenStats: () => void;
   onOpenAbout?: () => void;
@@ -16,10 +14,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  mode,
   difficulty,
   stats,
-  onSwitchMode,
   onSelectDifficulty,
   onOpenStats,
   onOpenAbout,
@@ -37,12 +33,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <h1 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              RPS Adaptive AI
+              Stone Paper Scissors AI
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-white/10 text-white border border-white/20">
-                Markov v2
+                Adaptive
               </span>
             </h1>
-            <p className="text-xs text-neutral-400">Order-1 & Order-2 Opponent Modeling</p>
+            <p className="text-xs text-neutral-400">Order-1 & Order-2 Markov Opponent Modeling</p>
           </div>
         </div>
 
@@ -118,26 +114,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
-          {!isHomePage && (
-            <button
-              onClick={onSwitchMode}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-white/15 transition-all hover:border-white/30"
-              title="Switch input mode"
-            >
-              {mode === 'camera' ? (
-                <>
-                  <Video className="w-3.5 h-3.5 text-white" />
-                  <span>Camera</span>
-                </>
-              ) : (
-                <>
-                  <Keyboard className="w-3.5 h-3.5 text-white" />
-                  <span>No Camera</span>
-                </>
-              )}
-            </button>
-          )}
-
           {onOpenAbout && (
             <button
               id="header-about-btn"

@@ -1,18 +1,18 @@
-# Rock-Paper-Scissors AI: Adaptive Markov Engine & Probabilistic Opponent Modeller ✊✋✌️
+# Stone-Paper-Scissors AI: Adaptive Markov Engine & Probabilistic Opponent Modeller ✊✋✌️
 
-> **Multi-Layer AI System: Constraint-Satisfaction Adversary, Symbolic Strategy Detection, Bayesian Opponent Modeling, & Vision Interface**
+> **Multi-Layer AI System: Constraint-Satisfaction Adversary, Symbolic Strategy Detection, Bayesian Opponent Modeling, & Web App**
 > 
 > *Developed by **Mrityunjay***
 
 [![Tests](https://img.shields.io/badge/pytest-21%20passed-brightgreen.svg)](#-test-suites)
-[![TypeScript](https://img.shields.io/badge/vitest-18%20passed-blue.svg)](#-test-suites)
+[![TypeScript](https://img.shields.io/badge/vitest-14%20passed-blue.svg)](#-test-suites)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
 
 ---
 
 ## 📌 Executive Summary & Architecture Overview
 
-This project extends an adaptive Rock-Paper-Scissors game into a comprehensive **Probabilistic Opponent Modeller** encompassing three AI layers:
+This project implements a streamlined **Stone-Paper-Scissors Game Web App** powered by an adaptive opponent modeling AI, featuring three formal machine learning & AI layers:
 
 1. **Layer 1: Constraint-Satisfaction (CSP) Adversary (`csp_adversary.py`)**  
    A constraint-based move generator implementing backtracking search with forward checking, chunk stitching, and entropy maximization. It synthesizes adversarial move sequences guaranteed to have zero triple repeats, global and local move balance ($\pm 1$), and bounded order-1 transition probabilities ($P(m_t \mid m_{t-1}) \le 0.45$, empirical entropy $H \approx 1.585$ bits). Used to rigorously stress-test opponent predictors.
@@ -78,9 +78,9 @@ graph TD
         EXP_UTIL --> EXPLAIN
     end
 
-    subgraph Interface ["Interactive Client & Vision (MediaPipe + React)"]
-        MP[MediaPipe Hand Landmark Tracker]
-        CURL[Geometric Finger-Curl Classifier]
+    subgraph Interface ["Interactive Stone-Paper-Scissors Web Interface"]
+        CARD[Tactile Move Cards: Rock, Paper, Scissors]
+        HOTKEY[Keyboard Shortcuts: R, P, S]
         HUD[Dark Luxury UI + Live Telemetry HUD]
     end
 
@@ -222,7 +222,7 @@ python run_experiments.py --interactive-demo
 # Run Python Pytest suite (21 unit tests: CSP, Strategy Rules, Bayesian updates):
 python -m pytest tests/
 
-# Run TypeScript Vitest suite (18 unit tests: Classifier, Markov AI, Rules, Logger):
+# Run TypeScript Vitest suite (14 unit tests: Markov AI, Rules, Logger):
 npm test
 ```
 
@@ -230,7 +230,7 @@ npm test
 ```bash
 npm run dev
 ```
-Open **[http://localhost:8000](http://localhost:8000)** in your browser for camera-based gesture play or manual tactile card play.
+Open **[http://localhost:8000](http://localhost:8000)** in your browser for instant Stone-Paper-Scissors gameplay with tactile move cards and keyboard hotkeys (R, P, S).
 
 ---
 
@@ -259,9 +259,9 @@ Open **[http://localhost:8000](http://localhost:8000)** in your browser for came
 │   ├── test_ai.py             # Unit tests for Markov AI engine
 │   └── test_rules.py          # Unit tests for game resolution logic
 ├── src/                       # Web application & TypeScript engine
-│   ├── ai/                    # Markov AI engine, hand gesture classifier, logger
-│   ├── components/            # React HUD, Arena, Camera & Card game views
-│   ├── App.tsx                # React application entry
+│   ├── ai/                    # Markov AI engine, game rules, telemetry logger
+│   ├── components/            # React HUD, Arena, GameScreen, About & Stats views
+│   ├── App.tsx                # React application controller
 │   └── main.tsx               # DOM bootstrap
 ├── package.json               # Node.js dependencies and script runners
 ├── requirements.txt           # Python scientific stack dependencies

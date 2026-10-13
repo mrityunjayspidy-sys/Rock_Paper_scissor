@@ -19,20 +19,17 @@ import {
   reconstructAiState,
 } from './ai';
 import { Header } from './components/Header';
-import { ModeSelector } from './components/ModeSelector';
-import { NoCameraGame } from './components/NoCameraGame';
-import { CameraGame } from './components/CameraGame';
+import { GameScreen } from './components/GameScreen';
 import { RevealArena } from './components/RevealArena';
 import { StatsView } from './components/StatsView';
 import { AboutView } from './components/AboutView';
 
-type AppView = 'mode-select' | 'play' | 'reveal' | 'stats' | 'about';
+type AppView = 'play' | 'reveal' | 'stats' | 'about';
 
 export const App: React.FC = () => {
-  const [mode, setMode] = useState<'camera' | 'nocamera'>('nocamera');
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
-  const [view, setView] = useState<AppView>('mode-select');
-  const [previousView, setPreviousView] = useState<AppView>('mode-select');
+  const [view, setView] = useState<AppView>('play');
+  const [previousView, setPreviousView] = useState<AppView>('play');
 
   // Load persisted round logs
   const [logs, setLogs] = useState<RoundLog[]>(() => loadSavedLogs());
@@ -69,11 +66,6 @@ export const App: React.FC = () => {
     }));
   };
 
-  const handleSelectMode = (selectedMode: 'camera' | 'nocamera') => {
-    setMode(selectedMode);
-    setView('play');
-  };
-
   const handleOpenStats = () => {
     setPreviousView(view);
     setView('stats');
@@ -85,11 +77,11 @@ export const App: React.FC = () => {
   };
 
   const handleBackFromStats = () => {
-    setView(previousView === 'stats' ? 'mode-select' : previousView);
+    setView(previousView === 'stats' ? 'play' : previousView);
   };
 
   const handleBackFromAbout = () => {
-    setView(previousView === 'about' ? 'mode-select' : previousView);
+    setView(previousView === 'about' ? 'play' : previousView);
   };
 
   const handlePlayMove = (playerMove: Move) => {
@@ -140,7 +132,7 @@ export const App: React.FC = () => {
   };
 
   const handleBackToHome = () => {
-    setView('mode-select');
+    setView('play');
   };
 
   const handleNextRound = () => {
@@ -154,7 +146,7 @@ export const App: React.FC = () => {
     setLogs([]);
     setHistory([]);
     setLastRoundDetails(null);
-    setView('mode-select');
+    setView('play');
   };
 
   const handleDownloadJSON = () => {
@@ -182,24 +174,22 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white selection:bg-white selection:text-black">
       <Header
-        mode={mode}
         difficulty={difficulty}
         stats={stats}
-        onSwitchMode={() => setView('mode-select')}
         onSelectDifficulty={handleSelectDifficulty}
         onOpenStats={handleOpenStats}
         onOpenAbout={handleOpenAbout}
         onReset={handleReset}
         onExitGame={handleBackToHome}
-        isHomePage={view === 'mode-select'}
+        isHomePage={view === 'play'}
       />
 
       <main className="flex-1 flex flex-col justify-center">
-        {view === 'mode-select' && (
-          <ModeSelector
+        {view === 'play' && (
+          <GameScreen
             difficulty={difficulty}
             onSelectDifficulty={handleSelectDifficulty}
-            onSelectMode={handleSelectMode}
+            onPlayMove={handlePlayMove}
             stats={stats}
             logs={logs}
             onOpenStats={handleOpenStats}
@@ -207,22 +197,6 @@ export const App: React.FC = () => {
             onResetStats={handleReset}
             onDownloadJSON={handleDownloadJSON}
             onDownloadCSV={handleDownloadCSV}
-          />
-        )}
-
-        {view === 'play' && mode === 'nocamera' && (
-          <NoCameraGame
-            difficulty={difficulty}
-            onPlayMove={handlePlayMove}
-            onBackToHome={handleBackToHome}
-          />
-        )}
-
-        {view === 'play' && mode === 'camera' && (
-          <CameraGame
-            difficulty={difficulty}
-            onPlayMove={handlePlayMove}
-            onBackToHome={handleBackToHome}
           />
         )}
 
@@ -247,24 +221,23 @@ export const App: React.FC = () => {
             onBack={handleBackFromStats}
             onDownloadJSON={handleDownloadJSON}
             onDownloadCSV={handleDownloadCSV}
-            backButtonLabel={previousView === 'mode-select' ? 'Back to Home' : 'Back to Game'}
+            backButtonLabel="Back to Game"
           />
         )}
 
         {view === 'about' && (
           <AboutView
             onBack={handleBackFromAbout}
-            backButtonLabel={previousView === 'mode-select' ? 'Back to Home' : 'Back to Game'}
+            backButtonLabel="Back to Game"
           />
         )}
       </main>
 
       <footer className="py-5 border-t border-white/10 text-center text-xs text-neutral-400 font-mono">
-        Rock-Paper-Scissors Adaptive AI &copy; 2026 • Made With Love And Code by <span className="text-white font-semibold">Mrityunjay</span>
+        Stone Paper Scissors Adaptive AI &copy; 2026 • Made With Love And Code by <span className="text-white font-semibold">Mrityunjay</span>
       </footer>
     </div>
   );
 };
 
 export default App;
-
